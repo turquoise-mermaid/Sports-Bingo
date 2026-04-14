@@ -37,12 +37,22 @@ function checkBingo(markedSquares: Set<number>): boolean {
   );
 }
 
+function shuffleBingoItems(items: BingoItem[]): BingoItem[] {
+  const freeSpace = items[12];
+  const others = [...items.slice(0, 12), ...items.slice(13)];
+  for (let i = others.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [others[i], others[j]] = [others[j], others[i]];
+  }
+  return [...others.slice(0, 12), freeSpace, ...others.slice(12)];
+}
+
 export function BingoBoard({ sport, onBackToSports }: BingoBoardProps) {
+  const [bingoItems, setBingoItems] = useState<BingoItem[]>(() => shuffleBingoItems(getBingoItems(sport)));
   const [markedSquares, setMarkedSquares] = useState<Set<number>>(new Set([12])); // Middle square is pre-marked
   const [expandedSquare, setExpandedSquare] = useState<number | null>(null);
   const [hasBingo, setHasBingo] = useState(false);
   const [showBingoMessage, setShowBingoMessage] = useState(false);
-  const bingoItems = getBingoItems(sport);
 
   // Check for bingo whenever marked squares change
   useEffect(() => {
@@ -71,6 +81,7 @@ export function BingoBoard({ sport, onBackToSports }: BingoBoardProps) {
   };
 
   const handleRestart = () => {
+    setBingoItems(shuffleBingoItems(getBingoItems(sport)));
     setMarkedSquares(new Set([12]));
     setExpandedSquare(null);
     setHasBingo(false);
