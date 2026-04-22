@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react";
 
 interface SportSelectionProps {
   onSelectSport: (sport: Sport) => void;
+  onBack: () => void;
 }
 
 const sports = [
@@ -51,9 +52,18 @@ const sports = [
   },
 ];
 
-export function SportSelection({ onSelectSport }: SportSelectionProps) {
+export function SportSelection({ onSelectSport, onBack }: SportSelectionProps) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md flex items-center mb-6">
+        <button
+          onClick={onBack}
+          className="text-neutral-400 hover:text-yellow-500 transition-colors flex items-center gap-1 text-sm"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+          Back
+        </button>
+      </div>
       <motion.div
         initial={{ scale: 0, y: -50 }}
         animate={{ scale: 1, y: 0 }}
@@ -61,10 +71,10 @@ export function SportSelection({ onSelectSport }: SportSelectionProps) {
         className="text-center mb-8"
       >
         <h1 className="text-yellow-500 mb-2 tracking-tight uppercase">
-          Sports Bingo
+          Select a Sport
         </h1>
         <div className="h-1 w-20 bg-yellow-500 mx-auto mb-3"></div>
-        <p className="text-neutral-400">Select a sport to begin</p>
+        <p className="text-neutral-400">Choose your sport to build your board</p>
       </motion.div>
 
       <div className="grid grid-cols-1 gap-3 w-full max-w-md">
