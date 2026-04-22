@@ -27,6 +27,7 @@ export interface SessionInfo {
   initials?: string;
   isHost?: boolean;
   joinCode?: number;
+  hostCode?: number;
 }
 
 export default function App() {
@@ -102,6 +103,7 @@ export default function App() {
       initials,
       isHost: true,
       joinCode,
+      hostCode,
     });
     setView('game');
   };

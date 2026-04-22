@@ -88,7 +88,7 @@ function PlayerProgressBar({
   const label = `${player.is_host ? '🎉 ' : ''}${player.initials ?? `P${player.player_number}`}`;
   return (
     <div className="flex items-center gap-2">
-      <span className={`text-xs font-mono w-12 text-right shrink-0 ${isMe ? 'text-yellow-400' : 'text-neutral-400'}`}>
+      <span className={`text-xs font-mono w-16 text-right shrink-0 whitespace-nowrap ${isMe ? 'text-yellow-400' : 'text-neutral-400'}`}>
         {label}
       </span>
       <div className="flex gap-0.5 flex-1">
@@ -179,6 +179,7 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
 
   // UI state
   const [showBackInfo, setShowBackInfo] = useState(false);
+  const [showCodes, setShowCodes] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const warned30Ref = useRef(false);
@@ -511,7 +512,7 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
           )}
         </div>
 
-        {/* Center: sport title (solo) or [Codes] placeholder (host) or empty (guest) */}
+        {/* Center: sport title (solo) or empty (multiplayer) */}
         {!isMultiplayer && (
           <motion.h2
             initial={{ y: -20, opacity: 0 }}
@@ -521,18 +522,9 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
             {sport} Bingo
           </motion.h2>
         )}
-        {imHost && (
-          <Button
-            variant="ghost"
-            className="text-neutral-500 hover:text-yellow-500 hover:bg-zinc-800 h-8 px-3 text-xs border border-zinc-700"
-          >
-            <Key className="w-3 h-3 mr-1" />
-            Codes
-          </Button>
-        )}
-        {!imHost && isMultiplayer && <div />}
+        {isMultiplayer && <div />}
 
-        {/* Right: Restart (solo), Share (host), empty (guest) */}
+        {/* Right: Restart (solo), Share + Codes (host), empty (guest) */}
         {!isMultiplayer && (
           <Button
             onClick={handleRestart}
@@ -544,14 +536,24 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
           </Button>
         )}
         {imHost && (
-          <button
-            onClick={handleShare}
-            className="flex items-center gap-1 text-neutral-400 hover:text-yellow-500 transition-colors h-8 px-2"
-            aria-label="Share invite"
-          >
-            <Share2 className="w-4 h-4" />
-            <span className="text-xs">{copied ? 'Copied!' : 'Share'}</span>
-          </button>
+          <div className="flex flex-col items-end gap-1">
+            <Button
+              onClick={handleShare}
+              variant="ghost"
+              className="text-neutral-300 hover:text-yellow-500 hover:bg-zinc-800 h-8 px-3 border border-zinc-700"
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              <span className="text-xs">{copied ? 'Copied!' : 'Share'}</span>
+            </Button>
+            <Button
+              onClick={() => setShowCodes(true)}
+              variant="ghost"
+              className="text-neutral-500 hover:text-yellow-500 hover:bg-zinc-800 h-8 px-2 !text-xs border border-zinc-700"
+            >
+              <Key className="w-3 h-3 mr-1" />
+              Codes
+            </Button>
+          </div>
         )}
         {!imHost && isMultiplayer && <div className="w-16" />}
       </div>
@@ -559,7 +561,7 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
       {/* Multiplayer subheader */}
       {isMultiplayer && (
         <div className="text-center mb-3">
-          <p className="text-yellow-500 uppercase tracking-wider text-sm font-medium">
+          <p className="text-yellow-500 uppercase tracking-wider text-base font-medium">
             {sessionInfo?.groupName}
           </p>
           <p className="text-neutral-500 text-xs mt-0.5">
@@ -607,6 +609,53 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
           )}
         </div>
       </div>
+
+      {/* Codes sheet — host only */}
+      <AnimatePresence>
+        {showCodes && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowCodes(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            />
+            <motion.div
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25 }}
+              className="fixed inset-x-0 bottom-0 z-50 bg-zinc-800 border-t-4 border-yellow-500 rounded-t-lg p-5"
+            >
+              <div className="max-w-md mx-auto">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-yellow-500 uppercase tracking-wider">Codes</h3>
+                  <button
+                    onClick={() => setShowCodes(false)}
+                    className="text-neutral-500 hover:text-neutral-200 transition-colors p-1"
+                    aria-label="Close"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-zinc-900 border-2 border-zinc-700 rounded p-3 text-center">
+                    <p className="text-neutral-500 text-xs uppercase tracking-wider mb-1">
+                      Host Code <span className="normal-case text-neutral-600">— keep private</span>
+                    </p>
+                    <p className="text-yellow-500 text-2xl font-mono tracking-widest">{sessionInfo?.hostCode}</p>
+                  </div>
+                  <div className="bg-zinc-900 border-2 border-zinc-700 rounded p-3 text-center">
+                    <p className="text-neutral-500 text-xs uppercase tracking-wider mb-1">
+                      Join Code <span className="normal-case text-neutral-600">— share with guests</span>
+                    </p>
+                    <p className="text-yellow-500 text-2xl font-mono tracking-widest">{sessionInfo?.joinCode}</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Back info sheet */}
       <AnimatePresence>
