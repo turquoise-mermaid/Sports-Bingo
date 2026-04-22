@@ -191,10 +191,11 @@ export default function App() {
             sport={selectedSport}
             sessionInfo={sessionInfo}
             onBackToSports={
-              sessionInfo?.isHost !== undefined
+              sessionInfo
                 ? handleBackToMultiplayerLogin
                 : handleBackToSportSelection
             }
+            onGameEnd={handleBackToLobby}
           />
         )}
       </div>

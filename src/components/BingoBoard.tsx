@@ -20,6 +20,7 @@ interface BingoBoardProps {
   sport: Sport;
   sessionInfo: SessionInfo | null;
   onBackToSports: () => void;
+  onGameEnd: () => void;
 }
 
 const WINNING_PATTERNS = [
@@ -127,25 +128,32 @@ function WinOrExpirePopup({
         className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
       />
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.8, opacity: 0 }}
-        transition={{ type: 'spring', damping: 25 }}
-        className={`fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 bg-zinc-800 border-2 ${borderColor} rounded-lg p-6 max-w-md mx-auto text-center`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center px-4"
       >
-        {icon && <div className="flex justify-center mb-3">{icon}</div>}
-        <h3 className="text-neutral-200 uppercase tracking-wider mb-3">{title}</h3>
-        <p className="text-neutral-400 mb-6">{message}</p>
-        <div className="flex gap-3">
-          <Button onClick={onNo} variant="outline" className="flex-1 border-zinc-600 text-neutral-300 hover:bg-zinc-700 h-10">No</Button>
-          <Button onClick={onYes} className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-zinc-900 h-10">Yes</Button>
-        </div>
+        <motion.div
+          initial={{ scale: 0.8 }}
+          animate={{ scale: 1 }}
+          exit={{ scale: 0.8 }}
+          transition={{ type: 'spring', damping: 25 }}
+          className={`w-full max-w-md bg-zinc-800 border-2 ${borderColor} rounded-lg p-6 text-center`}
+        >
+          {icon && <div className="flex justify-center mb-3">{icon}</div>}
+          <h3 className="text-neutral-200 uppercase tracking-wider mb-3">{title}</h3>
+          <p className="text-neutral-400 mb-6">{message}</p>
+          <div className="flex gap-3">
+            <Button onClick={onNo} variant="outline" className="flex-1 border-zinc-600 text-neutral-300 hover:bg-zinc-700 h-10">No</Button>
+            <Button onClick={onYes} className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-zinc-900 h-10">Yes</Button>
+          </div>
+        </motion.div>
       </motion.div>
     </>
   );
 }
 
-export function BingoBoard({ sport, sessionInfo, onBackToSports }: BingoBoardProps) {
+export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: BingoBoardProps) {
   const isMultiplayer = !!sessionInfo;
   const imHost = !!sessionInfo?.isHost;
 
@@ -329,7 +337,7 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports }: BingoBoardPro
     if (!showNoThanks) return;
     if (countdown <= 0) {
       window.close();
-      setTimeout(() => onBackToSports(), 500);
+      setTimeout(() => onGameEnd(), 500);
       return;
     }
     const t = setTimeout(() => setCountdown(c => c - 1), 1000);
@@ -417,7 +425,7 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports }: BingoBoardPro
           <WinOrExpirePopup
             title="Your Game Has Expired"
             message="Would you like to start a new game?"
-            onYes={onBackToSports}
+            onYes={onGameEnd}
             onNo={handleNoThanks}
             borderColor="border-zinc-600"
           />
@@ -430,7 +438,7 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports }: BingoBoardPro
           <WinOrExpirePopup
             title="Congratulations!"
             message="Would you like to start a new game?"
-            onYes={onBackToSports}
+            onYes={onGameEnd}
             onNo={handleNoThanks}
             borderColor="border-yellow-500"
             icon={<Trophy className="w-10 h-10 text-yellow-500" />}

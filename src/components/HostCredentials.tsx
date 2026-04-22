@@ -188,11 +188,17 @@ export function HostCredentials({ onBack, onContinue }: HostCredentialsProps) {
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
             />
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            >
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
               transition={{ type: 'spring', damping: 25 }}
-              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 bg-zinc-800 border-2 border-yellow-500 rounded-lg p-6 max-w-md mx-auto text-center"
+              className="w-full max-w-md bg-zinc-800 border-2 border-yellow-500 rounded-lg p-6 text-center"
             >
               <h3 className="text-yellow-500 uppercase tracking-wider mb-3">Ready to Start?</h3>
               <p className="text-neutral-400 mb-6">
@@ -218,6 +224,7 @@ export function HostCredentials({ onBack, onContinue }: HostCredentialsProps) {
                   {starting ? 'Starting…' : 'Start Game'}
                 </Button>
               </div>
+            </motion.div>
             </motion.div>
           </>
         )}
