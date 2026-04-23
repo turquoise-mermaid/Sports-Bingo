@@ -159,18 +159,59 @@ export async function joinSessionByCode(joinCode: number, userId: string, initia
   return { session, player };
 }
 
+export async function rejoinSession(joinCode: number, userId: string) {
+  const { data: session, error: sessionError } = await supabase
+    .from('sessions')
+    .select()
+    .eq('join_code', joinCode)
+    .eq('status', 'active')
+    .gt('expires_at', new Date().toISOString())
+    .single();
+
+  if (sessionError || !session) {
+    console.error('rejoinSession - session lookup error:', sessionError);
+    throw new Error('Session not found or expired.');
+  }
+
+  const { data: players, error: playerError } = await supabase
+    .from('players')
+    .select()
+    .eq('session_id', session.id)
+    .eq('anonymous_id', userId)
+    .order('joined_at', { ascending: true })
+    .limit(1);
+
+  const player = players?.[0];
+  if (playerError || !player) {
+    console.error('rejoinSession - player lookup error:', playerError);
+    throw new Error('No board found. Use the original invite link to join.');
+  }
+
+  return { session, player };
+}
+
 export async function loginAsHost(hostCode: number) {
   const { data: session, error } = await supabase
     .from('sessions')
-    .select('*, players(*)')
+    .select()
     .eq('host_code', hostCode)
     .eq('status', 'active')
     .gt('expires_at', new Date().toISOString())
     .single();
 
-  if (error || !session) throw new Error('Invalid host code or session expired');
+  if (error || !session) {
+    console.error('loginAsHost - session lookup error:', error);
+    throw new Error('Invalid host code or session expired');
+  }
 
-  const hostPlayer = (session.players as PlayerRow[]).find((p: any) => p.is_host);
+  const { data: players, error: playersError } = await supabase
+    .from('players')
+    .select()
+    .eq('session_id', session.id);
+
+  if (playersError) throw new Error('Could not load session players');
+
+  const hostPlayer = (players ?? []).find((p: PlayerRow) => p.is_host);
   if (!hostPlayer) throw new Error('Host player not found');
 
   return { session, player: hostPlayer };

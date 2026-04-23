@@ -109,22 +109,18 @@ export function HostCredentials({ onBack, onContinue }: HostCredentialsProps) {
             )}
           </div>
 
-          {/* Host Code + Join Code — only visible once valid */}
+          {/* Login Code — only visible once valid */}
           <AnimatePresence>
             {isValid && (
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 8 }}
-                className="w-full grid grid-cols-2 gap-3 mb-3"
+                className="w-full mb-3"
               >
                 <div className="bg-zinc-800 border-2 border-zinc-700 rounded p-3 text-center">
-                  <p className="text-neutral-500 text-xs uppercase tracking-wider mb-1">Host Code <span className="normal-case text-neutral-600">— keep private</span></p>
-                  <p className="text-yellow-500 text-2xl font-mono tracking-widest">{hostCode}</p>
-                </div>
-                <div className="bg-zinc-800 border-2 border-zinc-700 rounded p-3 text-center">
-                  <p className="text-neutral-500 text-xs uppercase tracking-wider mb-1">Join Code <span className="normal-case text-neutral-600">— share with guests</span></p>
-                  <p className="text-yellow-500 text-2xl font-mono tracking-widest">{joinCode}</p>
+                  <p className="text-neutral-200 text-base mb-1">Your Login Code: <span className="text-yellow-500 font-mono tracking-widest text-xl">{hostCode}</span></p>
+                  <p className="text-neutral-500 text-xs">Save this to return to your board if you navigate away</p>
                 </div>
               </motion.div>
             )}

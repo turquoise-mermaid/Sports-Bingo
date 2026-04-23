@@ -42,10 +42,6 @@ function checkBingo(marked: Set<number>): boolean {
   return WINNING_PATTERNS.some(p => p.every(i => marked.has(i)));
 }
 
-function getBestProgress(marked: number[]): number {
-  const s = new Set(marked);
-  return Math.max(0, ...WINNING_PATTERNS.map(p => p.filter(i => s.has(i)).length));
-}
 
 function generateBoardOrder(): number[] {
   const indices = [...Array(12).keys(), ...Array.from({ length: 12 }, (_, i) => i + 13)];
@@ -76,35 +72,6 @@ function sortedForProgressBars(
   return [me, ...(host ? [host] : []), ...guests];
 }
 
-function PlayerProgressBar({
-  player,
-  sections,
-  isMe,
-}: {
-  player: PlayerRow;
-  sections: number;
-  isMe: boolean;
-}) {
-  const label = `${player.is_host ? '🎉 ' : ''}${player.initials ?? `P${player.player_number}`}`;
-  return (
-    <div className="flex items-center gap-2">
-      <span className={`text-xs font-mono w-16 text-right shrink-0 whitespace-nowrap ${isMe ? 'text-yellow-400' : 'text-neutral-400'}`}>
-        {label}
-      </span>
-      <div className="flex gap-0.5 flex-1">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div
-            key={i}
-            className={`h-3 flex-1 rounded-sm transition-colors duration-500 ${i < sections ? 'bg-yellow-500' : 'bg-zinc-700'}`}
-          />
-        ))}
-      </div>
-      {sections >= 5 && (
-        <span className="text-yellow-400 text-xs font-mono shrink-0">BINGO!</span>
-      )}
-    </div>
-  );
-}
 
 function WinOrExpirePopup({
   title,
@@ -286,15 +253,19 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
       setProgressPlayers(prev => merge(prev, [updated]));
     });
 
-    // Re-fetch after subscription is live to pick up players who joined before us
-    const t = setTimeout(() => {
+    // Re-fetch after subscription is live to pick up players who joined before us.
+    // Two fetches: 1.5s and 4s, to handle slow joins and race conditions.
+    const fetch = () =>
       getSessionPlayers(sessionInfo.sessionId)
         .then(players => { if (players.length > 0) setProgressPlayers(prev => merge(prev, players)); })
         .catch(() => {});
-    }, 1500);
+
+    const t1 = setTimeout(fetch, 1500);
+    const t2 = setTimeout(fetch, 4000);
 
     return () => {
-      clearTimeout(t);
+      clearTimeout(t1);
+      clearTimeout(t2);
       supabase.removeChannel(channel);
     };
   }, [sessionInfo]);
@@ -562,7 +533,7 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
       {isMultiplayer && (
         <div className="text-center mb-3">
           <p className="text-yellow-500 uppercase tracking-wider text-base font-medium">
-            {sessionInfo?.groupName}
+            Team {sessionInfo?.groupName}
           </p>
           <p className="text-neutral-500 text-xs mt-0.5">
             {imHost ? 'I am the host' : `${sessionInfo?.initials}'s Board`}
@@ -590,19 +561,18 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
             ))}
           </motion.div>
 
-          {/* Progress bars — same width as grid */}
+          {/* Player initials — same width as grid */}
           {isMultiplayer && sortedPlayers.length > 0 && (
             <div className="mt-4 flex flex-col gap-2">
               {sortedPlayers.map(player => {
                 const isMe = player.id === sessionInfo?.playerId;
-                const marked = isMe ? [...markedSquares] : (player.marked_squares ?? []);
+                const label = `${player.is_host ? '🎉 ' : ''}${player.initials ?? `P${player.player_number}`}`;
                 return (
-                  <PlayerProgressBar
-                    key={player.id}
-                    player={player}
-                    sections={getBestProgress(marked)}
-                    isMe={isMe}
-                  />
+                  <div key={player.id} className="flex items-center gap-2">
+                    <span className={`text-xs font-mono w-16 text-right shrink-0 whitespace-nowrap ${isMe ? 'text-yellow-400' : 'text-neutral-400'}`}>
+                      {label}
+                    </span>
+                  </div>
                 );
               })}
             </div>

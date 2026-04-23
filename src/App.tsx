@@ -46,7 +46,7 @@ export default function App() {
       const code = parseInt(joinParam, 10);
       if (!isNaN(code)) {
         setDefaultJoinCode(code);
-        setView('multiplayer-code-login');
+        setView('guest-login');
       }
       window.history.replaceState({}, '', window.location.pathname);
     }
@@ -115,9 +115,10 @@ export default function App() {
     setView('game');
   };
 
-  const handleGoToGuestLogin = (joinCode?: number) => {
-    if (joinCode) setDefaultJoinCode(joinCode);
-    setView('guest-login');
+  const handlePlayerRejoin = (info: SessionInfo, sport: Sport) => {
+    setSelectedSport(sport);
+    setSessionInfo(info);
+    setView('game');
   };
 
   // --- Guest Login ---
@@ -174,10 +175,9 @@ export default function App() {
         {view === 'multiplayer-code-login' && (
           <MultiplayerCodeLogin
             user={user}
-            defaultJoinCode={defaultJoinCode}
             onBackToLobby={handleBackToLobby}
             onHostLogin={handleHostLogin}
-            onGuestLogin={handleGoToGuestLogin}
+            onPlayerRejoin={handlePlayerRejoin}
           />
         )}
         {view === 'guest-login' && (

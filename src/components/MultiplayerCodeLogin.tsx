@@ -3,30 +3,56 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Info } from 'lucide-react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { Button } from './ui/button';
-import { loginAsHost } from '../lib/sessions';
+import { loginAsHost, rejoinSession } from '../lib/sessions';
 import { SessionInfo, Sport } from '../App';
 
 interface MultiplayerCodeLoginProps {
   user: SupabaseUser;
-  defaultJoinCode?: number;
   onBackToLobby: () => void;
   onHostLogin: (sessionInfo: SessionInfo, sport: Sport) => void;
-  onGuestLogin: (defaultJoinCode?: number) => void;
+  onPlayerRejoin: (sessionInfo: SessionInfo, sport: Sport) => void;
 }
 
 export function MultiplayerCodeLogin({
-  user: _user,
-  defaultJoinCode,
+  user,
   onBackToLobby,
   onHostLogin,
-  onGuestLogin,
+  onPlayerRejoin,
 }: MultiplayerCodeLoginProps) {
   const [showInfo, setShowInfo] = useState(false);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
   const [showHostPopup, setShowHostPopup] = useState(false);
   const [hostCodeInput, setHostCodeInput] = useState('');
   const [hostError, setHostError] = useState<string | null>(null);
+  const [showPlayerPopup, setShowPlayerPopup] = useState(false);
+  const [playerCodeInput, setPlayerCodeInput] = useState('');
+  const [playerError, setPlayerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const handlePlayerCodeSubmit = async () => {
+    const code = parseInt(playerCodeInput.trim(), 10);
+    if (isNaN(code)) { setPlayerError('Please enter a valid code.'); return; }
+    setLoading(true);
+    setPlayerError(null);
+    try {
+      const { session, player } = await rejoinSession(code, user.id);
+      onPlayerRejoin(
+        {
+          sessionId: session.id,
+          playerId: player.id,
+          groupName: session.group_name,
+          initials: player.initials,
+          isHost: false,
+          joinCode: code,
+        },
+        session.sport as Sport
+      );
+    } catch (err) {
+      setPlayerError(err instanceof Error ? err.message : 'Could not find your board.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleHostCodeSubmit = async () => {
     const code = parseInt(hostCodeInput.trim(), 10);
@@ -97,10 +123,10 @@ export function MultiplayerCodeLogin({
               I'm the Host
             </Button>
             <Button
-              onClick={() => onGuestLogin(defaultJoinCode)}
+              onClick={() => { setShowPlayerPopup(true); setPlayerError(null); setPlayerCodeInput(''); }}
               className="w-full bg-gradient-to-r from-zinc-700 to-zinc-800 hover:from-zinc-600 hover:to-zinc-700 text-neutral-200 border-2 border-yellow-500 h-14 text-lg"
             >
-              I Have a Code
+              I'm a Player
             </Button>
           </div>
         </motion.div>
@@ -236,6 +262,63 @@ export function MultiplayerCodeLogin({
                     className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-zinc-900 h-10 disabled:opacity-50"
                   >
                     {loading ? 'Checking...' : 'Enter'}
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+      {/* Player rejoin pop-up */}
+      <AnimatePresence>
+        {showPlayerPopup && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowPlayerPopup(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            />
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            >
+              <motion.div
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.8 }}
+                transition={{ type: 'spring', damping: 25 }}
+                className="w-full max-w-md bg-zinc-800 border-2 border-yellow-500 rounded-lg p-6 text-center"
+              >
+                <h3 className="text-yellow-500 uppercase tracking-wider mb-4">Enter Game Code</h3>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={playerCodeInput}
+                  onChange={(e) => setPlayerCodeInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  onKeyDown={(e) => e.key === 'Enter' && handlePlayerCodeSubmit()}
+                  placeholder="• • • •"
+                  maxLength={4}
+                  autoFocus
+                  className="w-full bg-zinc-900 border-2 border-zinc-600 focus:border-yellow-500 rounded p-3 text-neutral-200 text-2xl text-center font-mono tracking-widest outline-none transition-colors mb-2"
+                />
+                {playerError && <p className="text-red-400 text-sm mt-1 mb-2">{playerError}</p>}
+                <div className="flex gap-3 mt-4">
+                  <Button
+                    onClick={() => setShowPlayerPopup(false)}
+                    variant="outline"
+                    className="flex-1 border-zinc-600 text-neutral-300 hover:bg-zinc-700 h-10"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handlePlayerCodeSubmit}
+                    disabled={loading || playerCodeInput.trim().length < 4}
+                    className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-zinc-900 h-10 disabled:opacity-50"
+                  >
+                    {loading ? 'Finding...' : 'Enter'}
                   </Button>
                 </div>
               </motion.div>

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { ArrowLeft } from 'lucide-react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { Button } from './ui/button';
 import { joinSessionByCode } from '../lib/sessions';
@@ -13,7 +12,7 @@ interface GuestLoginProps {
   onJoined: (sessionInfo: SessionInfo, sport: Sport) => void;
 }
 
-export function GuestLogin({ user, onBack, onJoined }: GuestLoginProps) {
+export function GuestLogin({ user, onJoined }: GuestLoginProps) {
   const [initials, setInitials] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -46,36 +45,27 @@ export function GuestLogin({ user, onBack, onJoined }: GuestLoginProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col p-4">
-
-      {/* Header */}
-      <div className="flex items-center pt-2 mb-8">
-        <Button
-          onClick={onBack}
-          variant="ghost"
-          className="text-neutral-300 hover:bg-zinc-800 hover:text-yellow-500 h-8 px-3"
-        >
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          Back
-        </Button>
-        <h2 className="text-yellow-500 uppercase tracking-wider mx-auto pr-16">
-          Join Game
-        </h2>
-      </div>
-
-      {/* Centered content */}
-      <div className="flex-1 flex items-center justify-center">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         className="w-full max-w-md"
       >
-        <div className="flex flex-col gap-5 items-center">
+        <div className="text-center mb-8">
+          <h1 className="text-yellow-500 uppercase tracking-widest text-3xl font-bold mb-3">
+            Welcome!
+          </h1>
+          <p className="text-neutral-200 text-sm leading-relaxed">
+            Please enter your name or initials as you'd like to see them appear in the game. Then enter your code and click Continue to start your game.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-5">
 
           {/* Initials */}
           <div className="w-full">
             <label className="text-neutral-400 text-xs uppercase tracking-wider mb-1 block text-center">
-              Your Initials
+              Your Name or Initials
             </label>
             <input
               type="text"
@@ -120,7 +110,6 @@ export function GuestLogin({ user, onBack, onJoined }: GuestLoginProps) {
 
         </div>
       </motion.div>
-      </div>
     </div>
   );
 }
