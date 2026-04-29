@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { SportSelection } from './components/SportSelection';
 import { SessionLobby } from './components/SessionLobby';
 import { HostCredentials } from './components/HostCredentials';
@@ -6,7 +6,7 @@ import { MultiplayerCodeLogin } from './components/MultiplayerCodeLogin';
 import { GuestLogin } from './components/GuestLogin';
 import { BingoBoard } from './components/BingoBoard';
 import { useAuth } from './hooks/useAuth';
-import { createMultiplayerSession } from './lib/sessions';
+import { createMultiplayerSession, loginAsHost, rejoinSession } from './lib/sessions';
 
 export type Sport = 'soccer' | 'americanFootball' | 'baseball' | 'basketball' | 'tennis' | 'hockey';
 
@@ -26,8 +26,32 @@ export interface SessionInfo {
   groupName?: string;
   initials?: string;
   isHost?: boolean;
-  joinCode?: number;
-  hostCode?: number;
+  joinCode?: string;
+}
+
+// --- Session persistence helpers ---
+const SESSION_KEY = 'sportsbingo_session';
+
+interface StoredSession {
+  joinCode: string;
+  isHost: boolean;
+}
+
+function saveSession(joinCode: string, isHost: boolean) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ joinCode, isHost }));
+}
+
+function clearSession() {
+  localStorage.removeItem(SESSION_KEY);
+}
+
+function loadSession(): StoredSession | null {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
 }
 
 export default function App() {
@@ -36,21 +60,72 @@ export default function App() {
   const [sessionMode, setSessionMode] = useState<SessionMode>('solo');
   const [selectedSport, setSelectedSport] = useState<Sport | null>(null);
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
-  const [defaultJoinCode, setDefaultJoinCode] = useState<number | undefined>(undefined);
+  const [defaultJoinCode, setDefaultJoinCode] = useState<string | undefined>(undefined);
+
+  const [reconnecting, setReconnecting] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('join')) return false;
+    return loadSession() !== null;
+  });
+
+  const joinedViaUrlRef = useRef(false);
 
   // Route guests who arrive via shared link (?join=XXXX)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const joinParam = params.get('join');
     if (joinParam) {
-      const code = parseInt(joinParam, 10);
-      if (!isNaN(code)) {
-        setDefaultJoinCode(code);
-        setView('guest-login');
-      }
+      joinedViaUrlRef.current = true;
+      setDefaultJoinCode(joinParam);
+      setView('guest-login');
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
+
+  // Auto-reconnect from localStorage on load
+  useEffect(() => {
+    if (loading || !user) return;
+    if (joinedViaUrlRef.current) { setReconnecting(false); return; }
+
+    const stored = loadSession();
+    if (!stored) { setReconnecting(false); return; }
+
+    const reconnect = async () => {
+      try {
+        if (stored.isHost) {
+          const { session, player } = await loginAsHost(stored.joinCode, user.id);
+          setSelectedSport(session.sport as Sport);
+          setSessionInfo({
+            sessionId: session.id,
+            playerId: player.id,
+            groupName: session.group_name,
+            initials: player.initials,
+            isHost: true,
+            joinCode: session.join_code,
+          });
+          setView('game');
+        } else {
+          const { session, player } = await rejoinSession(stored.joinCode, user.id);
+          setSelectedSport(session.sport as Sport);
+          setSessionInfo({
+            sessionId: session.id,
+            playerId: player.id,
+            groupName: session.group_name,
+            initials: player.initials,
+            isHost: false,
+            joinCode: stored.joinCode,
+          });
+          setView('game');
+        }
+      } catch {
+        clearSession();
+      } finally {
+        setReconnecting(false);
+      }
+    };
+
+    reconnect();
+  }, [user, loading]);
 
   // --- Session Lobby ---
   const handleSolo = () => {
@@ -84,8 +159,7 @@ export default function App() {
   const handleCredentialsComplete = async (
     groupName: string,
     initials: string,
-    hostCode: number,
-    joinCode: number
+    joinCode: string
   ) => {
     if (!user || !selectedSport) return;
     const { session, player } = await createMultiplayerSession(
@@ -93,7 +167,6 @@ export default function App() {
       user.id,
       groupName,
       initials,
-      hostCode,
       joinCode
     );
     setSessionInfo({
@@ -103,8 +176,8 @@ export default function App() {
       initials,
       isHost: true,
       joinCode,
-      hostCode,
     });
+    saveSession(joinCode, true);
     setView('game');
   };
 
@@ -112,12 +185,14 @@ export default function App() {
   const handleHostLogin = (info: SessionInfo, sport: Sport) => {
     setSelectedSport(sport);
     setSessionInfo(info);
+    if (info.joinCode != null) saveSession(info.joinCode, true);
     setView('game');
   };
 
   const handlePlayerRejoin = (info: SessionInfo, sport: Sport) => {
     setSelectedSport(sport);
     setSessionInfo(info);
+    if (info.joinCode != null) saveSession(info.joinCode, false);
     setView('game');
   };
 
@@ -125,6 +200,7 @@ export default function App() {
   const handleGuestJoined = (info: SessionInfo, sport: Sport) => {
     setSelectedSport(sport);
     setSessionInfo(info);
+    if (info.joinCode != null) saveSession(info.joinCode, false);
     setView('game');
   };
 
@@ -133,6 +209,7 @@ export default function App() {
     setSelectedSport(null);
     setSessionInfo(null);
     setDefaultJoinCode(undefined);
+    clearSession();
     setView('session-lobby');
   };
 
@@ -144,7 +221,7 @@ export default function App() {
     setView('multiplayer-code-login');
   };
 
-  if (loading || !user) return null;
+  if (loading || !user || reconnecting) return null;
 
   return (
     <div className="min-h-screen bg-zinc-950 relative overflow-hidden">

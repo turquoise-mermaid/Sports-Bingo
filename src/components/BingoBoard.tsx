@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, RotateCcw, Trophy, Share2, Info, Key } from 'lucide-react';
+import { ArrowLeft, RotateCcw, Trophy, Share2, Info } from 'lucide-react';
 import { Sport, SessionInfo } from '../App';
 import { BingoSquare } from './BingoSquare';
 import { getBingoItems, BingoItem } from './bingoData';
@@ -146,7 +146,6 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
 
   // UI state
   const [showBackInfo, setShowBackInfo] = useState(false);
-  const [showCodes, setShowCodes] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const warned30Ref = useRef(false);
@@ -204,12 +203,9 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
       .catch(() => {});
     getSessionPlayers(sessionInfo.sessionId)
       .then(players => {
-        // Only replace state if we got real data — an empty result from a
-        // failed/blocked query must not overwrite the local-state row we already have
         if (players.length > 0) {
           setProgressPlayers(prev => {
             const byId = new Map(players.map(p => [p.id, p]));
-            // Keep any local-only rows (e.g. current player) not returned by the DB
             for (const local of prev) {
               if (!byId.has(local.id)) byId.set(local.id, local);
             }
@@ -318,6 +314,16 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
 
   const handleConfirmMark = (index: number) => {
     const newMarked = new Set([...markedSquares, index]);
+    setMarkedSquares(newMarked);
+    setExpandedSquare(null);
+    if (sessionInfo) {
+      savePlayerBoard(sessionInfo.playerId, boardOrder, [...newMarked]).catch(() => {});
+    }
+  };
+
+  const handleConfirmUnmark = (index: number) => {
+    const newMarked = new Set(markedSquares);
+    newMarked.delete(index);
     setMarkedSquares(newMarked);
     setExpandedSquare(null);
     if (sessionInfo) {
@@ -495,7 +501,7 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
         )}
         {isMultiplayer && <div />}
 
-        {/* Right: Restart (solo), Share + Codes (host), empty (guest) */}
+        {/* Right: Restart (solo), Share (host), empty (guest) */}
         {!isMultiplayer && (
           <Button
             onClick={handleRestart}
@@ -507,24 +513,14 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
           </Button>
         )}
         {imHost && (
-          <div className="flex flex-col items-end gap-1">
-            <Button
-              onClick={handleShare}
-              variant="ghost"
-              className="text-neutral-300 hover:text-yellow-500 hover:bg-zinc-800 h-8 px-3 border border-zinc-700"
-            >
-              <Share2 className="w-4 h-4 mr-2" />
-              <span className="text-xs">{copied ? 'Copied!' : 'Share'}</span>
-            </Button>
-            <Button
-              onClick={() => setShowCodes(true)}
-              variant="ghost"
-              className="text-neutral-500 hover:text-yellow-500 hover:bg-zinc-800 h-8 px-2 !text-xs border border-zinc-700"
-            >
-              <Key className="w-3 h-3 mr-1" />
-              Codes
-            </Button>
-          </div>
+          <Button
+            onClick={handleShare}
+            variant="ghost"
+            className="text-neutral-300 hover:text-yellow-500 hover:bg-zinc-800 h-8 px-3 border border-zinc-700"
+          >
+            <Share2 className="w-4 h-4 mr-2" />
+            <span className="text-xs">{copied ? 'Copied!' : 'Share'}</span>
+          </Button>
         )}
         {!imHost && isMultiplayer && <div className="w-16" />}
       </div>
@@ -538,6 +534,11 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
           <p className="text-neutral-500 text-xs mt-0.5">
             {imHost ? 'I am the host' : `${sessionInfo?.initials}'s Board`}
           </p>
+          {imHost && sessionInfo?.joinCode && (
+            <p className="text-neutral-400 text-xs mt-1 font-mono tracking-widest">
+              Join Code: <span className="text-yellow-500">{sessionInfo.joinCode}</span>
+            </p>
+          )}
         </div>
       )}
 
@@ -566,7 +567,7 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
             <div className="mt-4 flex flex-col gap-2">
               {sortedPlayers.map(player => {
                 const isMe = player.id === sessionInfo?.playerId;
-                const label = `${player.is_host ? '🎉 ' : ''}${player.initials ?? `P${player.player_number}`}`;
+                const label = player.initials ?? `P${player.player_number}`;
                 return (
                   <div key={player.id} className="flex items-center gap-2">
                     <span className={`text-xs font-mono w-16 text-right shrink-0 whitespace-nowrap ${isMe ? 'text-yellow-400' : 'text-neutral-400'}`}>
@@ -579,53 +580,6 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
           )}
         </div>
       </div>
-
-      {/* Codes sheet — host only */}
-      <AnimatePresence>
-        {showCodes && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowCodes(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
-            />
-            <motion.div
-              initial={{ y: '100%', opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: '100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 25 }}
-              className="fixed inset-x-0 bottom-0 z-50 bg-zinc-800 border-t-4 border-yellow-500 rounded-t-lg p-5"
-            >
-              <div className="max-w-md mx-auto">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-yellow-500 uppercase tracking-wider">Codes</h3>
-                  <button
-                    onClick={() => setShowCodes(false)}
-                    className="text-neutral-500 hover:text-neutral-200 transition-colors p-1"
-                    aria-label="Close"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-zinc-900 border-2 border-zinc-700 rounded p-3 text-center">
-                    <p className="text-neutral-500 text-xs uppercase tracking-wider mb-1">
-                      Host Code <span className="normal-case text-neutral-600">— keep private</span>
-                    </p>
-                    <p className="text-yellow-500 text-2xl font-mono tracking-widest">{sessionInfo?.hostCode}</p>
-                  </div>
-                  <div className="bg-zinc-900 border-2 border-zinc-700 rounded p-3 text-center">
-                    <p className="text-neutral-500 text-xs uppercase tracking-wider mb-1">
-                      Join Code <span className="normal-case text-neutral-600">— share with guests</span>
-                    </p>
-                    <p className="text-yellow-500 text-2xl font-mono tracking-widest">{sessionInfo?.joinCode}</p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
 
       {/* Back info sheet */}
       <AnimatePresence>
@@ -708,13 +662,22 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
                     >
                       Cancel
                     </Button>
-                    <Button
-                      onClick={() => handleConfirmMark(expandedSquare)}
-                      className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-zinc-900 h-10"
-                      disabled={markedSquares.has(expandedSquare)}
-                    >
-                      {markedSquares.has(expandedSquare) ? 'Already Marked' : 'Mark Square'}
-                    </Button>
+                    {markedSquares.has(expandedSquare) ? (
+                      <Button
+                        onClick={() => handleConfirmUnmark(expandedSquare)}
+                        variant="outline"
+                        className="flex-1 border-zinc-600 text-neutral-300 hover:bg-zinc-700 hover:text-neutral-200 h-10"
+                      >
+                        Unmark Square
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => handleConfirmMark(expandedSquare)}
+                        className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-zinc-900 h-10"
+                      >
+                        Mark Square
+                      </Button>
+                    )}
                   </div>
                 </div>
               </motion.div>

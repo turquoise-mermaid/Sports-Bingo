@@ -13,6 +13,12 @@ interface MultiplayerCodeLoginProps {
   onPlayerRejoin: (sessionInfo: SessionInfo, sport: Sport) => void;
 }
 
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+function sanitizeCode(val: string): string {
+  return val.toUpperCase().replace(new RegExp(`[^${CODE_CHARS}]`, 'g'), '').slice(0, 6);
+}
+
 export function MultiplayerCodeLogin({
   user,
   onBackToLobby,
@@ -30,8 +36,8 @@ export function MultiplayerCodeLogin({
   const [loading, setLoading] = useState(false);
 
   const handlePlayerCodeSubmit = async () => {
-    const code = parseInt(playerCodeInput.trim(), 10);
-    if (isNaN(code)) { setPlayerError('Please enter a valid code.'); return; }
+    const code = playerCodeInput.trim();
+    if (code.length < 6) { setPlayerError('Please enter a valid code.'); return; }
     setLoading(true);
     setPlayerError(null);
     try {
@@ -55,15 +61,15 @@ export function MultiplayerCodeLogin({
   };
 
   const handleHostCodeSubmit = async () => {
-    const code = parseInt(hostCodeInput.trim(), 10);
-    if (isNaN(code)) {
+    const code = hostCodeInput.trim();
+    if (code.length < 6) {
       setHostError('Please enter a valid code.');
       return;
     }
     setLoading(true);
     setHostError(null);
     try {
-      const { session, player } = await loginAsHost(code);
+      const { session, player } = await loginAsHost(code, user.id);
       onHostLogin(
         {
           sessionId: session.id,
@@ -76,7 +82,7 @@ export function MultiplayerCodeLogin({
         session.sport as Sport
       );
     } catch (err) {
-      setHostError(err instanceof Error ? err.message : 'Invalid host code.');
+      setHostError(err instanceof Error ? err.message : 'Invalid code or session expired.');
     } finally {
       setLoading(false);
     }
@@ -212,7 +218,7 @@ export function MultiplayerCodeLogin({
         )}
       </AnimatePresence>
 
-      {/* Host code pop-up */}
+      {/* Host join code pop-up */}
       <AnimatePresence>
         {showHostPopup && (
           <>
@@ -234,16 +240,15 @@ export function MultiplayerCodeLogin({
                 transition={{ type: 'spring', damping: 25 }}
                 className="w-full max-w-md bg-zinc-800 border-2 border-yellow-500 rounded-lg p-6 text-center"
               >
-                <h3 className="text-yellow-500 uppercase tracking-wider mb-4">Enter Host Code</h3>
+                <h3 className="text-yellow-500 uppercase tracking-wider mb-4">Enter Join Code</h3>
                 <input
                   type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
+                  inputMode="text"
                   value={hostCodeInput}
-                  onChange={(e) => setHostCodeInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  onChange={(e) => setHostCodeInput(sanitizeCode(e.target.value))}
                   onKeyDown={(e) => e.key === 'Enter' && handleHostCodeSubmit()}
-                  placeholder="• • • •"
-                  maxLength={4}
+                  placeholder="• • • • • •"
+                  maxLength={6}
                   autoFocus
                   className="w-full bg-zinc-900 border-2 border-zinc-600 focus:border-yellow-500 rounded p-3 text-neutral-200 text-2xl text-center font-mono tracking-widest outline-none transition-colors mb-2"
                 />
@@ -258,7 +263,7 @@ export function MultiplayerCodeLogin({
                   </Button>
                   <Button
                     onClick={handleHostCodeSubmit}
-                    disabled={loading || hostCodeInput.trim().length < 4}
+                    disabled={loading || hostCodeInput.trim().length < 6}
                     className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-zinc-900 h-10 disabled:opacity-50"
                   >
                     {loading ? 'Checking...' : 'Enter'}
@@ -269,6 +274,7 @@ export function MultiplayerCodeLogin({
           </>
         )}
       </AnimatePresence>
+
       {/* Player rejoin pop-up */}
       <AnimatePresence>
         {showPlayerPopup && (
@@ -291,16 +297,15 @@ export function MultiplayerCodeLogin({
                 transition={{ type: 'spring', damping: 25 }}
                 className="w-full max-w-md bg-zinc-800 border-2 border-yellow-500 rounded-lg p-6 text-center"
               >
-                <h3 className="text-yellow-500 uppercase tracking-wider mb-4">Enter Game Code</h3>
+                <h3 className="text-yellow-500 uppercase tracking-wider mb-4">Enter Join Code</h3>
                 <input
                   type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
+                  inputMode="text"
                   value={playerCodeInput}
-                  onChange={(e) => setPlayerCodeInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  onChange={(e) => setPlayerCodeInput(sanitizeCode(e.target.value))}
                   onKeyDown={(e) => e.key === 'Enter' && handlePlayerCodeSubmit()}
-                  placeholder="• • • •"
-                  maxLength={4}
+                  placeholder="• • • • • •"
+                  maxLength={6}
                   autoFocus
                   className="w-full bg-zinc-900 border-2 border-zinc-600 focus:border-yellow-500 rounded p-3 text-neutral-200 text-2xl text-center font-mono tracking-widest outline-none transition-colors mb-2"
                 />
@@ -315,7 +320,7 @@ export function MultiplayerCodeLogin({
                   </Button>
                   <Button
                     onClick={handlePlayerCodeSubmit}
-                    disabled={loading || playerCodeInput.trim().length < 4}
+                    disabled={loading || playerCodeInput.trim().length < 6}
                     className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-zinc-900 h-10 disabled:opacity-50"
                   >
                     {loading ? 'Finding...' : 'Enter'}

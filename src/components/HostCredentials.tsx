@@ -5,28 +5,37 @@ import { Button } from './ui/button';
 
 interface HostCredentialsProps {
   onBack: () => void;
-  onContinue: (groupName: string, initials: string, hostCode: number, joinCode: number) => Promise<void>;
+  onContinue: (groupName: string, initials: string, joinCode: string) => Promise<void>;
 }
 
-function generateDistinctCodes(): { hostCode: number; joinCode: number } {
-  const hostCode = Math.floor(1000 + Math.random() * 9000);
-  let joinCode = Math.floor(1000 + Math.random() * 9000);
-  while (joinCode === hostCode) joinCode = Math.floor(1000 + Math.random() * 9000);
-  return { hostCode, joinCode };
+const JOIN_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+function generateJoinCode(): string {
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += JOIN_CODE_CHARS[Math.floor(Math.random() * JOIN_CODE_CHARS.length)];
+  }
+  return code;
 }
 
 export function HostCredentials({ onBack, onContinue }: HostCredentialsProps) {
   const [groupName, setGroupName] = useState('');
-  const [initials, setInitials] = useState('');
-  const [{ hostCode, joinCode }] = useState(generateDistinctCodes);
+  const [username, setUsername] = useState('');
+  const [joinCode] = useState(generateJoinCode);
   const [showTimerWarning, setShowTimerWarning] = useState(false);
   const [copied, setCopied] = useState(false);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
 
-  const isValid = groupName.trim().length > 0 && initials.trim().length >= 2;
+  const isValid = groupName.trim().length > 0 && username.trim().length >= 2;
   const shareLink = `${window.location.origin}?join=${joinCode}`;
-  const shareMessage = `${initials.trim() || '...'} has invited you to ${groupName.trim() || '...'} Bingo. Your code is ${joinCode}. Sign in at: ${shareLink}`;
+  const shareMessage = `${username.trim() || '...'} has invited you to ${groupName.trim() || '...'} Bingo. Your code is ${joinCode}. Sign in at: ${shareLink}`;
+
+  const handleUsernameChange = (val: string) => {
+    const trimmed = val.slice(0, 18);
+    if (!trimmed) { setUsername(''); return; }
+    setUsername(trimmed[0].toUpperCase() + trimmed.slice(1).toLowerCase());
+  };
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -44,7 +53,7 @@ export function HostCredentials({ onBack, onContinue }: HostCredentialsProps) {
     setStarting(true);
     setStartError(null);
     try {
-      await onContinue(groupName.trim(), initials.trim(), hostCode, joinCode);
+      await onContinue(groupName.trim(), username.trim(), joinCode);
     } catch (err) {
       const msg = (err as any)?.message ?? (err instanceof Error ? err.message : null);
       setStartError(msg || 'Could not start game. Please try again.');
@@ -59,8 +68,8 @@ export function HostCredentials({ onBack, onContinue }: HostCredentialsProps) {
         animate={{ scale: 1, opacity: 1 }}
         className="w-full max-w-md"
       >
-        {/* Header */}
-        <div className="flex items-center mb-8">
+        {/* Back button row */}
+        <div className="mb-2">
           <Button
             onClick={onBack}
             variant="ghost"
@@ -69,17 +78,19 @@ export function HostCredentials({ onBack, onContinue }: HostCredentialsProps) {
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back
           </Button>
-          <h2 className="text-yellow-500 uppercase tracking-wider mx-auto pr-16">
-            Host Setup
-          </h2>
         </div>
+
+        {/* Centered title */}
+        <h2 className="text-yellow-500 uppercase tracking-wider text-center mb-8">
+          Host Setup
+        </h2>
 
         <div className="flex flex-col gap-5 items-center">
 
-          {/* Group Name */}
+          {/* Team Name */}
           <div className="w-full">
             <label className="text-neutral-400 text-xs uppercase tracking-wider mb-1 block text-center">
-              Group Name
+              Team Name
             </label>
             <input
               type="text"
@@ -91,53 +102,38 @@ export function HostCredentials({ onBack, onContinue }: HostCredentialsProps) {
             />
           </div>
 
-          {/* Initials */}
+          {/* Username */}
           <div className="w-full mb-3">
             <label className="text-neutral-400 text-xs uppercase tracking-wider mb-1 block text-center">
-              Your Initials
+              Username
             </label>
             <input
               type="text"
-              value={initials}
-              onChange={(e) => setInitials(e.target.value.slice(0, 4).toUpperCase())}
-              placeholder="e.g. JS"
-              maxLength={4}
-              className="w-full bg-zinc-800 border-2 border-zinc-600 focus:border-yellow-500 rounded p-3 text-neutral-200 text-center uppercase outline-none transition-colors tracking-widest text-xl"
+              value={username}
+              onChange={(e) => handleUsernameChange(e.target.value)}
+              placeholder="e.g. Jordan"
+              maxLength={18}
+              className="w-full bg-zinc-800 border-2 border-zinc-600 focus:border-yellow-500 rounded p-3 text-neutral-200 text-center outline-none transition-colors"
             />
-            {initials.length > 0 && initials.length < 2 && (
+            {username.length > 0 && username.length < 2 && (
               <p className="text-red-400 text-xs text-center mt-1">Minimum 2 characters</p>
             )}
           </div>
 
-          {/* Login Code — only visible once valid */}
+          {/* Join code + Share — only visible once valid */}
           <AnimatePresence>
             {isValid && (
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 8 }}
-                className="w-full mb-3"
+                className="w-full flex flex-col gap-2"
               >
                 <div className="bg-zinc-800 border-2 border-zinc-700 rounded p-3 text-center">
-                  <p className="text-neutral-200 text-base mb-1">Your Login Code: <span className="text-yellow-500 font-mono tracking-widest text-xl">{hostCode}</span></p>
-                  <p className="text-neutral-500 text-xs">Save this to return to your board if you navigate away</p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Sharing Link + Share Button — only visible once valid */}
-          <AnimatePresence>
-            {isValid && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                className="w-full flex flex-col gap-2 mt-6"
-              >
-                <div className="bg-zinc-800 border-2 border-zinc-700 rounded p-3 text-center">
-                  <p className="text-neutral-500 text-xs uppercase tracking-wider mb-1">Sharing Link</p>
-                  <p className="text-neutral-400 text-sm font-mono break-all">{shareLink}</p>
+                  <p className="text-neutral-200 text-base mb-1">
+                    Join Code: <span className="text-yellow-500 font-mono tracking-widest text-xl">{joinCode}</span>
+                  </p>
+                  <p className="text-neutral-500 text-xs">Share this code with your guests</p>
                 </div>
                 <Button
                   onClick={handleShare}

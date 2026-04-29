@@ -80,8 +80,7 @@ export async function createMultiplayerSession(
   userId: string,
   groupName: string,
   initials: string,
-  hostCode: number,
-  joinCode: number
+  joinCode: string
 ) {
   const terms = getBingoItems(sport);
   const now = new Date();
@@ -93,7 +92,6 @@ export async function createMultiplayerSession(
       terms,
       created_by: userId,
       group_name: groupName,
-      host_code: hostCode,
       join_code: joinCode,
       started_at: now.toISOString(),
       expires_at: new Date(now.getTime() + 6 * 60 * 60 * 1000).toISOString(),
@@ -122,7 +120,7 @@ export async function createMultiplayerSession(
   return { session, player };
 }
 
-export async function joinSessionByCode(joinCode: number, userId: string, initials: string) {
+export async function joinSessionByCode(joinCode: string, userId: string, initials: string) {
   const { data: session, error: sessionError } = await supabase
     .from('sessions')
     .select()
@@ -159,7 +157,7 @@ export async function joinSessionByCode(joinCode: number, userId: string, initia
   return { session, player };
 }
 
-export async function rejoinSession(joinCode: number, userId: string) {
+export async function rejoinSession(joinCode: string, userId: string) {
   const { data: session, error: sessionError } = await supabase
     .from('sessions')
     .select()
@@ -168,10 +166,7 @@ export async function rejoinSession(joinCode: number, userId: string) {
     .gt('expires_at', new Date().toISOString())
     .single();
 
-  if (sessionError || !session) {
-    console.error('rejoinSession - session lookup error:', sessionError);
-    throw new Error('Session not found or expired.');
-  }
+  if (sessionError || !session) throw new Error('Session not found or expired.');
 
   const { data: players, error: playerError } = await supabase
     .from('players')
@@ -182,39 +177,32 @@ export async function rejoinSession(joinCode: number, userId: string) {
     .limit(1);
 
   const player = players?.[0];
-  if (playerError || !player) {
-    console.error('rejoinSession - player lookup error:', playerError);
-    throw new Error('No board found. Use the original invite link to join.');
-  }
+  if (playerError || !player) throw new Error('No board found. Use the original invite link to join.');
 
   return { session, player };
 }
 
-export async function loginAsHost(hostCode: number) {
+export async function loginAsHost(joinCode: string, userId: string) {
   const { data: session, error } = await supabase
     .from('sessions')
     .select()
-    .eq('host_code', hostCode)
+    .eq('join_code', joinCode)
     .eq('status', 'active')
     .gt('expires_at', new Date().toISOString())
     .single();
 
-  if (error || !session) {
-    console.error('loginAsHost - session lookup error:', error);
-    throw new Error('Invalid host code or session expired');
-  }
+  if (error || !session) throw new Error('Session not found or expired');
 
   const { data: players, error: playersError } = await supabase
     .from('players')
     .select()
-    .eq('session_id', session.id);
+    .eq('session_id', session.id)
+    .eq('anonymous_id', userId)
+    .eq('is_host', true);
 
-  if (playersError) throw new Error('Could not load session players');
+  if (playersError || !players?.length) throw new Error('You are not the host of this session');
 
-  const hostPlayer = (players ?? []).find((p: PlayerRow) => p.is_host);
-  if (!hostPlayer) throw new Error('Host player not found');
-
-  return { session, player: hostPlayer };
+  return { session, player: players[0] };
 }
 
 export async function savePlayerBoard(playerId: number, boardOrder: number[], markedSquares: number[]) {
@@ -248,7 +236,7 @@ export async function getSessionPlayers(sessionId: number): Promise<PlayerRow[]>
 export async function getSessionById(sessionId: number) {
   const { data, error } = await supabase
     .from('sessions')
-    .select('id, sport, group_name, host_code, join_code, started_at, expires_at, status')
+    .select('id, sport, group_name, join_code, started_at, expires_at, status')
     .eq('id', sessionId)
     .single();
   if (error) throw error;
