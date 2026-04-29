@@ -15,6 +15,7 @@ import {
   subscribeToSessionPlayers,
   PlayerRow,
 } from '../lib/sessions';
+import { Leaderboard } from './Leaderboard';
 
 interface BingoBoardProps {
   sport: Sport;
@@ -54,22 +55,6 @@ function generateBoardOrder(): number[] {
 
 function boardFromOrder(items: BingoItem[], order: number[]): BingoItem[] {
   return order.map(i => items[i]);
-}
-
-function sortedForProgressBars(
-  players: PlayerRow[],
-  myId: number,
-  imHost: boolean
-): PlayerRow[] {
-  const me = players.find(p => p.id === myId);
-  const byTime = (a: PlayerRow, b: PlayerRow) =>
-    new Date(a.joined_at ?? 0).getTime() - new Date(b.joined_at ?? 0).getTime();
-  const others = players.filter(p => p.id !== myId).sort(byTime);
-  if (!me) return others;
-  if (imHost) return [me, ...others];
-  const host = others.find(p => p.is_host);
-  const guests = others.filter(p => !p.is_host);
-  return [me, ...(host ? [host] : []), ...guests];
 }
 
 
@@ -317,7 +302,7 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
     setMarkedSquares(newMarked);
     setExpandedSquare(null);
     if (sessionInfo) {
-      savePlayerBoard(sessionInfo.playerId, boardOrder, [...newMarked]).catch(() => {});
+      savePlayerBoard(sessionInfo.playerId, boardOrder, [...newMarked], new Date().toISOString()).catch(() => {});
     }
   };
 
@@ -374,10 +359,6 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
       </div>
     );
   }
-
-  const sortedPlayers = sessionInfo
-    ? sortedForProgressBars(progressPlayers, sessionInfo.playerId, imHost)
-    : [];
 
   return (
     <div className="min-h-screen p-4 flex flex-col">
@@ -562,21 +543,13 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
             ))}
           </motion.div>
 
-          {/* Player initials — same width as grid */}
-          {isMultiplayer && sortedPlayers.length > 0 && (
-            <div className="mt-4 flex flex-col gap-2">
-              {sortedPlayers.map(player => {
-                const isMe = player.id === sessionInfo?.playerId;
-                const label = player.initials ?? `P${player.player_number}`;
-                return (
-                  <div key={player.id} className="flex items-center gap-2">
-                    <span className={`text-xs font-mono w-16 text-right shrink-0 whitespace-nowrap ${isMe ? 'text-yellow-400' : 'text-neutral-400'}`}>
-                      {label}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+          {/* Leaderboard — multiplayer only */}
+          {isMultiplayer && progressPlayers.length > 0 && sessionInfo && (
+            <Leaderboard
+              players={progressPlayers}
+              myId={sessionInfo.playerId}
+              myMarkedSquares={markedSquares}
+            />
           )}
         </div>
       </div>

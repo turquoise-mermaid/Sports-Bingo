@@ -10,6 +10,7 @@ export interface PlayerRow {
   initials?: string;
   is_host?: boolean;
   joined_at?: string;
+  last_marked_at?: string;
 }
 
 export async function createSession(sport: Sport, userId: string) {
@@ -205,11 +206,15 @@ export async function loginAsHost(joinCode: string, userId: string) {
   return { session, player: players[0] };
 }
 
-export async function savePlayerBoard(playerId: number, boardOrder: number[], markedSquares: number[]) {
-  const { error } = await supabase
-    .from('players')
-    .update({ board_order: boardOrder, marked_squares: markedSquares })
-    .eq('id', playerId);
+export async function savePlayerBoard(
+  playerId: number,
+  boardOrder: number[],
+  markedSquares: number[],
+  lastMarkedAt?: string
+) {
+  const update: Record<string, unknown> = { board_order: boardOrder, marked_squares: markedSquares };
+  if (lastMarkedAt) update.last_marked_at = lastMarkedAt;
+  const { error } = await supabase.from('players').update(update).eq('id', playerId);
   if (error) throw error;
 }
 
@@ -226,7 +231,7 @@ export async function loadPlayerBoard(playerId: number) {
 export async function getSessionPlayers(sessionId: number): Promise<PlayerRow[]> {
   const { data, error } = await supabase
     .from('players')
-    .select('id, player_number, initials, is_host, joined_at, marked_squares')
+    .select('id, player_number, initials, is_host, joined_at, marked_squares, last_marked_at')
     .eq('session_id', sessionId)
     .order('joined_at', { ascending: true });
   if (error) throw error;
