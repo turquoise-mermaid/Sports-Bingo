@@ -41,6 +41,7 @@ export function SessionLobby({ onSolo, onMultiplayerCreate }: SessionLobbyProps)
 
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
+            <div className="w-9 shrink-0" />
             <Button
               onClick={onSolo}
               className="flex-1 bg-gradient-to-r from-zinc-700 to-zinc-800 hover:from-zinc-600 hover:to-zinc-700 text-neutral-200 border-2 border-yellow-500 h-14 text-lg justify-center"
@@ -49,7 +50,7 @@ export function SessionLobby({ onSolo, onMultiplayerCreate }: SessionLobbyProps)
             </Button>
             <button
               onClick={() => setInfoPopup('solo')}
-              className="text-neutral-400 hover:text-yellow-500 transition-colors p-2"
+              className="text-neutral-400 hover:text-yellow-500 transition-colors p-2 w-9 shrink-0"
               aria-label="Solo info"
             >
               <Info className="w-5 h-5" />
@@ -57,6 +58,7 @@ export function SessionLobby({ onSolo, onMultiplayerCreate }: SessionLobbyProps)
           </div>
 
           <div className="flex items-center gap-2">
+            <div className="w-9 shrink-0" />
             <Button
               onClick={onMultiplayerCreate}
               className="flex-1 bg-gradient-to-r from-zinc-700 to-zinc-800 hover:from-zinc-600 hover:to-zinc-700 text-neutral-200 border-2 border-yellow-500 h-14 text-lg justify-center"
@@ -65,7 +67,7 @@ export function SessionLobby({ onSolo, onMultiplayerCreate }: SessionLobbyProps)
             </Button>
             <button
               onClick={() => setInfoPopup('multiplayer')}
-              className="text-neutral-400 hover:text-yellow-500 transition-colors p-2"
+              className="text-neutral-400 hover:text-yellow-500 transition-colors p-2 w-9 shrink-0"
               aria-label="Multiplayer info"
             >
               <Info className="w-5 h-5" />
