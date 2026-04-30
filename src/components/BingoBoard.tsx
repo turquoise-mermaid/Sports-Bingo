@@ -277,12 +277,11 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
   useEffect(() => {
     if (!checkBingo(markedSquares) || hasBingo) return;
     setHasBingo(true);
-    if (isMultiplayer) {
-      setShowMultiplayerWin(true);
-    } else {
+    if (!isMultiplayer) {
       setShowBingoMessage(true);
-      setTimeout(() => setShowBingoMessage(false), 5000);
+      setTimeout(() => setShowBingoMessage(false), 3000);
     }
+    setTimeout(() => setShowMultiplayerWin(true), 3000);
   }, [markedSquares]);
 
   // No-thanks countdown
@@ -346,10 +345,17 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
   };
 
   const handleNoThanks = () => {
-    setShowMultiplayerWin(false);
     setShowExpiredPopup(false);
     setShowNoThanks(true);
     setCountdown(15);
+  };
+
+  const handleWinNo = () => {
+    setShowMultiplayerWin(false);
+    if (!isMultiplayer) {
+      setShowNoThanks(true);
+      setCountdown(15);
+    }
   };
 
   if (!boardReady) {
@@ -391,36 +397,33 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
         )}
       </AnimatePresence>
 
-      {/* Multiplayer win pop-up */}
+      {/* Win pop-up (solo and multiplayer) */}
       <AnimatePresence>
         {showMultiplayerWin && !showNoThanks && (
           <WinOrExpirePopup
             title="Congratulations!"
             message="Would you like to start a new game?"
             onYes={onGameEnd}
-            onNo={handleNoThanks}
+            onNo={handleWinNo}
             borderColor="border-yellow-500"
             icon={<Trophy className="w-10 h-10 text-yellow-500" />}
           />
         )}
       </AnimatePresence>
 
-      {/* No-thanks countdown */}
+      {/* No-thanks countdown bar */}
       <AnimatePresence>
         {showNoThanks && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="fixed inset-0 backdrop-blur-sm z-50" style={{ backgroundColor: 'rgba(0,0,0,0.9)' }}
-            />
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-md mx-auto text-center"
-            >
-              <p className="text-neutral-300 text-lg mb-2">Thank you for playing!</p>
-              <p className="text-neutral-500">This page will close in {countdown} seconds.</p>
-            </motion.div>
-          </>
+          <motion.div
+            initial={{ y: -50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -50, opacity: 0 }}
+            className="fixed top-0 inset-x-0 z-50 bg-zinc-900 text-center py-2 px-4"
+            style={{ borderBottom: '2px solid #27272a' }}
+          >
+            <span className="text-neutral-300 text-sm">Thank you for playing! </span>
+            <span className="text-neutral-500 text-sm">Closing in {countdown}s.</span>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -449,24 +452,35 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
       {/* Header */}
       <div className="flex items-center justify-between mb-2 pt-2">
 
-        {/* Left: Back + optional (i) */}
-        <div className="flex items-center gap-1">
-          <Button
-            onClick={onBackToSports}
-            variant="ghost"
-            className="text-neutral-300 hover:bg-zinc-800 hover:text-yellow-500 h-8 px-3"
-          >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Back
-          </Button>
-          {(!isMultiplayer || imHost) && (
-            <button
-              onClick={() => setShowBackInfo(true)}
-              className="text-neutral-500 hover:text-yellow-500 transition-colors"
-              aria-label="Back info"
+        {/* Left: Back + optional (i) + Start New Game (multiplayer winner) */}
+        <div className="flex flex-col items-start gap-0.5">
+          <div className="flex items-center gap-1">
+            <Button
+              onClick={onBackToSports}
+              variant="ghost"
+              className="text-neutral-300 hover:bg-zinc-800 hover:text-yellow-500 h-8 px-3"
             >
-              <Info className="w-4 h-4" />
-            </button>
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Back
+            </Button>
+            {(!isMultiplayer || imHost) && (
+              <button
+                onClick={() => setShowBackInfo(true)}
+                className="text-neutral-500 hover:text-yellow-500 transition-colors"
+                aria-label="Back info"
+              >
+                <Info className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          {hasBingo && isMultiplayer && !showMultiplayerWin && (
+            <Button
+              onClick={onGameEnd}
+              variant="ghost"
+              className="text-yellow-500 hover:bg-zinc-800 hover:text-yellow-400 h-7 px-3 text-xs"
+            >
+              Start New Game
+            </Button>
           )}
         </div>
 
