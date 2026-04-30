@@ -225,7 +225,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-zinc-950 relative overflow-hidden">
-      <div className="absolute inset-0 opacity-[0.03]" style={{
+      <div className="absolute inset-0" style={{ opacity: 0.03,
         backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.5) 10px, rgba(255,255,255,.5) 11px),
                          repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(255,255,255,.5) 10px, rgba(255,255,255,.5) 11px)`
       }}></div>

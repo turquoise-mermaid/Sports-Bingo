@@ -75,9 +75,8 @@ export function Leaderboard({ players, myId, myMarkedSquares }: LeaderboardProps
           return (
             <div
               key={player.id}
-              className={`rounded px-2 py-2 ${
-                isMe ? 'bg-zinc-800 border border-yellow-500/40' : 'bg-zinc-800/50'
-              }`}
+              className={`rounded px-2 py-2 ${isMe ? 'bg-zinc-800 border' : 'bg-zinc-800/50'}`}
+              style={isMe ? { borderColor: 'rgba(234,179,8,0.4)' } : undefined}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '3px', minWidth: 0 }}>
