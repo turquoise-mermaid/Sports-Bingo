@@ -31,11 +31,17 @@ function hasBingo(squares: number[]): boolean {
 function MiniGrid({ markedSquares }: { markedSquares: number[] }) {
   const marked = new Set(markedSquares);
   return (
-    <div className="flex flex-wrap gap-px shrink-0 w-[54px]">
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1px', width: '50px', flexShrink: 0 }}>
       {Array.from({ length: 25 }, (_, i) => (
         <div
           key={i}
-          className={`w-2.5 h-2.5 rounded-sm ${marked.has(i) ? 'bg-yellow-500' : 'bg-zinc-600'}`}
+          style={{
+            width: '9px',
+            height: '9px',
+            borderRadius: '1px',
+            flexShrink: 0,
+            backgroundColor: marked.has(i) ? '#eab308' : '#52525b',
+          }}
         />
       ))}
     </div>
@@ -60,30 +66,28 @@ export function Leaderboard({ players, myId, myMarkedSquares }: LeaderboardProps
   return (
     <div className="mt-5 w-full">
       <p className="text-neutral-500 text-xs uppercase tracking-wider text-center mb-2">Leaderboard</p>
-      <div className="flex flex-col gap-1.5">
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
         {sorted.map((player, i) => {
           const isMe = player.id === myId;
           const rank = i + 1;
           const label = player.initials ?? `P${player.player_number}`;
-          const rankDisplay = player.bingo && rank <= 3 ? MEDALS[rank - 1] : null;
+          const medal = player.bingo && rank <= 3 ? MEDALS[rank - 1] : null;
           return (
             <div
               key={player.id}
-              className={`flex items-center gap-2 rounded px-2 py-1.5 ${
+              className={`rounded px-2 py-2 ${
                 isMe ? 'bg-zinc-800 border border-yellow-500/40' : 'bg-zinc-800/50'
               }`}
             >
-              <span className="text-base w-7 text-center shrink-0 leading-none">
-                {rankDisplay}
-              </span>
-              <span
-                className={`text-xs font-mono flex-1 min-w-0 truncate ${
-                  isMe ? 'text-yellow-400' : 'text-neutral-300'
-                }`}
-              >
-                {label}
-              </span>
-              <MiniGrid markedSquares={player.squares} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', minWidth: 0 }}>
+                  {medal && <span style={{ fontSize: '13px', lineHeight: 1, flexShrink: 0 }}>{medal}</span>}
+                  <span className={`text-xs font-mono truncate ${isMe ? 'text-yellow-400' : 'text-neutral-300'}`}>
+                    {label}
+                  </span>
+                </div>
+                <MiniGrid markedSquares={player.squares} />
+              </div>
             </div>
           );
         })}

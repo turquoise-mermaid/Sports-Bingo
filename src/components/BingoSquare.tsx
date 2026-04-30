@@ -36,7 +36,7 @@ export function BingoSquare({ item, isMarked, isFreeSpace, onClick }: BingoSquar
       )}
 
       {/* Label */}
-      <span className={`text-[8px] mt-0.5 text-center leading-tight ${isMarked || isFreeSpace ? 'text-zinc-900' : 'text-neutral-400'}`}>
+      <span style={{ fontSize: '12px' }} className={`mt-0.5 text-center leading-tight ${isMarked || isFreeSpace ? 'text-zinc-900' : 'text-neutral-400'}`}>
         {isFreeSpace ? 'FREE' : item.name}
       </span>
 
