@@ -65,7 +65,7 @@ export function Leaderboard({ players, myId, myMarkedSquares }: LeaderboardProps
           const isMe = player.id === myId;
           const rank = i + 1;
           const label = player.initials ?? `P${player.player_number}`;
-          const rankDisplay = player.bingo && rank <= 3 ? MEDALS[rank - 1] : rank;
+          const rankDisplay = player.bingo && rank <= 3 ? MEDALS[rank - 1] : null;
           return (
             <div
               key={player.id}
