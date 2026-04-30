@@ -523,9 +523,8 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
         </div>
       )}
 
-      {/* Grid + progress bars */}
-      <div className="flex-1 flex items-center justify-center">
-        <div className="w-full max-w-md">
+      {/* Grid + leaderboard */}
+      <div className="w-full max-w-md mx-auto">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -551,7 +550,6 @@ export function BingoBoard({ sport, sessionInfo, onBackToSports, onGameEnd }: Bi
               myMarkedSquares={markedSquares}
             />
           )}
-        </div>
       </div>
 
       {/* Back info sheet */}

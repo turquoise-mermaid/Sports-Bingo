@@ -122,51 +122,57 @@ export async function createMultiplayerSession(
 }
 
 export async function joinSessionByCode(joinCode: string, userId: string, initials: string) {
-  const { data: session, error: sessionError } = await supabase
+  const { data: sessions, error: sessionError } = await supabase
     .from('sessions')
-    .select()
+    .select('id, sport, group_name, join_code, status, expires_at')
     .eq('join_code', joinCode)
     .eq('status', 'active')
     .gt('expires_at', new Date().toISOString())
-    .single();
+    .limit(1);
 
+  const session = sessions?.[0];
   if (sessionError || !session) throw new Error('Session not found or expired');
 
-  const { count } = await supabase
+  const { count, error: countError } = await supabase
     .from('players')
     .select('*', { count: 'exact', head: true })
     .eq('session_id', session.id);
 
-  if ((count ?? 0) >= 5) throw new Error('This session is full');
+  if (countError) throw new Error('Could not load session players');
+  if ((count ?? 0) >= 5) throw new Error('This session is full (max 5 players)');
 
   const now = new Date().toISOString();
-  const { data: player, error: playerError } = await supabase
+  const nextPlayerNumber = (count ?? 0) + 1;
+  const { data: players, error: playerError } = await supabase
     .from('players')
     .insert({
       session_id: session.id,
-      player_number: (count ?? 0) + 1,
+      player_number: nextPlayerNumber,
       anonymous_id: userId,
       initials,
       is_host: false,
       joined_at: now,
     })
     .select()
-    .single();
+    .limit(1);
 
-  if (playerError) throw playerError;
+  if (playerError) throw new Error(playerError.message ?? 'Could not join session');
+  const player = players?.[0];
+  if (!player) throw new Error('Could not join session');
 
   return { session, player };
 }
 
 export async function rejoinSession(joinCode: string, userId: string) {
-  const { data: session, error: sessionError } = await supabase
+  const { data: sessions, error: sessionError } = await supabase
     .from('sessions')
-    .select()
+    .select('id, sport, group_name, join_code, status, expires_at')
     .eq('join_code', joinCode)
     .eq('status', 'active')
     .gt('expires_at', new Date().toISOString())
-    .single();
+    .limit(1);
 
+  const session = sessions?.[0];
   if (sessionError || !session) throw new Error('Session not found or expired.');
 
   const { data: players, error: playerError } = await supabase
@@ -184,14 +190,15 @@ export async function rejoinSession(joinCode: string, userId: string) {
 }
 
 export async function loginAsHost(joinCode: string, userId: string) {
-  const { data: session, error } = await supabase
+  const { data: sessions, error } = await supabase
     .from('sessions')
-    .select()
+    .select('id, sport, group_name, join_code, status, expires_at')
     .eq('join_code', joinCode)
     .eq('status', 'active')
     .gt('expires_at', new Date().toISOString())
-    .single();
+    .limit(1);
 
+  const session = sessions?.[0];
   if (error || !session) throw new Error('Session not found or expired');
 
   const { data: players, error: playersError } = await supabase
