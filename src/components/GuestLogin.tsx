@@ -81,7 +81,7 @@ export function GuestLogin({ user, defaultJoinCode, defaultUsername, onBack, onJ
 
           {/* Username */}
           <div className="w-full">
-            <label className="text-neutral-400 text-xs uppercase tracking-wider mb-1 block text-center">
+            <label className="text-neutral-400 uppercase tracking-wider mb-1 block text-center" style={{ fontSize: '14px' }}>
               Username
             </label>
             <input
@@ -99,7 +99,7 @@ export function GuestLogin({ user, defaultJoinCode, defaultUsername, onBack, onJ
 
           {/* Join Code */}
           <div className="w-full">
-            <label className="text-neutral-400 text-xs uppercase tracking-wider mb-1 block text-center">
+            <label className="text-neutral-400 uppercase tracking-wider mb-1 block text-center" style={{ fontSize: '14px' }}>
               Game Code
             </label>
             <input

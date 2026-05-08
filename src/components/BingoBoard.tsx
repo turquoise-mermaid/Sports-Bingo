@@ -432,7 +432,7 @@ export function BingoBoard({ sport, sessionInfo, username, onBackToSports, onGam
             {SPORT_NAMES[sport].toUpperCase()} BINGO
           </h2>
           {username && (
-            <p className="text-neutral-500 text-xs mt-0.5">{username}'s Board</p>
+            <p className="text-neutral-500 mt-0.5" style={{ fontSize: '14px' }}>{username}'s Board</p>
           )}
         </motion.div>
       )}
@@ -465,7 +465,8 @@ export function BingoBoard({ sport, sessionInfo, username, onBackToSports, onGam
             <Button
               onClick={onGameEnd}
               variant="ghost"
-              className="text-green-500 hover:bg-zinc-800 hover:text-green-400 h-7 px-3 text-xs"
+              className="text-green-500 hover:bg-zinc-800 hover:text-green-400 h-7 px-3"
+              style={{ fontSize: '14px' }}
             >
               Start New Game
             </Button>
@@ -501,10 +502,10 @@ export function BingoBoard({ sport, sessionInfo, username, onBackToSports, onGam
               className="text-neutral-300 hover:text-green-500 hover:bg-zinc-800 h-8 px-3 border border-zinc-700"
             >
               <Share2 className="w-4 h-4 mr-2" />
-              <span className="text-xs">{copied ? 'Copied!' : 'Share'}</span>
+              <span style={{ fontSize: '14px' }}>{copied ? 'Copied!' : 'Share'}</span>
             </Button>
             {sessionInfo?.joinCode && (
-              <p className="text-neutral-400 text-xs font-mono tracking-widest pr-1">
+              <p className="text-neutral-400 font-mono tracking-widest pr-1" style={{ fontSize: '14px' }}>
                 <span className="text-green-500">{sessionInfo.joinCode}</span>
               </p>
             )}
@@ -517,7 +518,7 @@ export function BingoBoard({ sport, sessionInfo, username, onBackToSports, onGam
       {isMultiplayer && (
         <div className="text-center mb-1">
           <p className="text-neutral-300 text-sm uppercase tracking-wider">{sessionInfo?.groupName}</p>
-          <p className="text-neutral-500 text-xs mt-0.5">
+          <p className="text-neutral-500 mt-0.5" style={{ fontSize: '14px' }}>
             {imHost ? `Host: ${username}` : `${sessionInfo?.initials}'s Board`}
           </p>
         </div>

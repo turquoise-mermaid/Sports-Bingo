@@ -97,13 +97,13 @@ export function SessionLobby({ user: _user, onSolo, onMultiplayerCreate, onJoin,
         >
           <div className="text-center mb-8">
             <h2 className="text-3xl uppercase tracking-wider mb-1" style={{ color: GREEN }}>Fanatic Bingo</h2>
-            <p className="text-xs tracking-wider text-neutral-400 mb-2">By Fans, For Fans.</p>
+            <p className="tracking-wider mb-2" style={{ color: GREEN, fontSize: '16px' }}>By Fans, For Fans.</p>
             <div className="h-1 w-20 mx-auto" style={{ backgroundColor: GREEN }} />
           </div>
 
           {/* Username */}
           <div className="w-full mb-3">
-            <label className="text-neutral-400 text-xs uppercase tracking-wider mb-1 block text-center">
+            <label className="text-neutral-400 uppercase tracking-wider mb-1 block text-center" style={{ fontSize: '14px' }}>
               Your Username
             </label>
             <div className="flex items-center gap-2">
@@ -122,7 +122,7 @@ export function SessionLobby({ user: _user, onSolo, onMultiplayerCreate, onJoin,
               <div className="w-9 shrink-0" />
             </div>
             {showUsernameError && (
-              <p className="text-red-400 text-xs text-center mt-1">Please enter a username to continue</p>
+              <p className="text-red-400 text-center mt-1" style={{ fontSize: '14px' }}>Please enter a username to continue</p>
             )}
             {!showUsernameError && username.length > 0 && username.trim().length < 2 && (
               <p className="text-red-400 text-xs text-center mt-1">Minimum 2 characters</p>
@@ -138,7 +138,7 @@ export function SessionLobby({ user: _user, onSolo, onMultiplayerCreate, onJoin,
               <div className="flex-1 flex rounded overflow-hidden" style={{ border: `2px solid ${GREEN}` }}>
                 <Button
                   onClick={() => guardedAction(() => onSolo(username.trim()))}
-                  className="flex-1 bg-gradient-to-r from-zinc-700 to-zinc-800 hover:from-zinc-600 hover:to-zinc-700 text-neutral-200 text-lg justify-center rounded-none h-14"
+                  className="flex-1 bg-gradient-to-r from-zinc-700 to-zinc-800 hover:from-zinc-600 hover:to-zinc-700 text-neutral-200 text-lg justify-center rounded-none h-12"
                 >
                   Private Game
                 </Button>
@@ -160,7 +160,7 @@ export function SessionLobby({ user: _user, onSolo, onMultiplayerCreate, onJoin,
               <div className="flex-1 flex rounded overflow-hidden" style={{ border: `2px solid ${GREEN}` }}>
                 <Button
                   onClick={() => guardedAction(() => onMultiplayerCreate(username.trim()))}
-                  className="flex-1 bg-gradient-to-r from-zinc-700 to-zinc-800 hover:from-zinc-600 hover:to-zinc-700 text-neutral-200 text-lg justify-center rounded-none h-14"
+                  className="flex-1 bg-gradient-to-r from-zinc-700 to-zinc-800 hover:from-zinc-600 hover:to-zinc-700 text-neutral-200 text-lg justify-center rounded-none h-12"
                 >
                   Multiplayer Game
                 </Button>
@@ -182,7 +182,7 @@ export function SessionLobby({ user: _user, onSolo, onMultiplayerCreate, onJoin,
               <div className="flex-1 flex rounded overflow-hidden" style={{ border: `2px solid ${GREEN}` }}>
                 <Button
                   onClick={handleToggleJoin}
-                  className="flex-1 bg-gradient-to-r from-zinc-700 to-zinc-800 hover:from-zinc-600 hover:to-zinc-700 text-neutral-200 text-lg justify-center rounded-none h-14"
+                  className="flex-1 bg-gradient-to-r from-zinc-700 to-zinc-800 hover:from-zinc-600 hover:to-zinc-700 text-neutral-200 text-lg justify-center rounded-none h-12"
                 >
                   Join Game
                 </Button>
@@ -227,7 +227,7 @@ export function SessionLobby({ user: _user, onSolo, onMultiplayerCreate, onJoin,
                     <div className="w-9 shrink-0" />
                   </div>
                   {joinError && (
-                    <p className="text-red-400 text-xs text-center">{joinError}</p>
+                    <p className="text-red-400 text-center" style={{ fontSize: '14px' }}>{joinError}</p>
                   )}
                   <div className="flex items-center gap-2">
                     <div className="w-9 shrink-0" />
@@ -252,7 +252,8 @@ export function SessionLobby({ user: _user, onSolo, onMultiplayerCreate, onJoin,
       <div className="flex flex-col items-center gap-3 pb-8">
         <button
           onClick={onFaq}
-          className="text-neutral-500 hover:text-neutral-300 text-xs tracking-wider transition-colors"
+          className="text-neutral-500 hover:text-neutral-300 tracking-wider transition-colors"
+          style={{ fontSize: '14px' }}
         >
           FAQs
         </button>
@@ -260,7 +261,8 @@ export function SessionLobby({ user: _user, onSolo, onMultiplayerCreate, onJoin,
           href="https://github.com/turquoise-mermaid/Sports-Bingo/issues/new"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-neutral-500 hover:text-neutral-300 text-xs uppercase tracking-wider transition-colors"
+          className="text-neutral-500 hover:text-neutral-300 uppercase tracking-wider transition-colors"
+          style={{ fontSize: '14px' }}
         >
           Submit an Issue
         </a>

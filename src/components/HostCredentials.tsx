@@ -89,7 +89,7 @@ export function HostCredentials({ onBack, onContinue, defaultUsername }: HostCre
 
           {/* Team Name */}
           <div className="w-full">
-            <label className="text-neutral-400 text-xs uppercase tracking-wider mb-1 block text-center">
+            <label className="text-neutral-400 uppercase tracking-wider mb-1 block text-center" style={{ fontSize: '14px' }}>
               Team Name
             </label>
             <input
@@ -104,7 +104,7 @@ export function HostCredentials({ onBack, onContinue, defaultUsername }: HostCre
 
           {/* Username */}
           <div className="w-full mb-3">
-            <label className="text-neutral-400 text-xs uppercase tracking-wider mb-1 block text-center">
+            <label className="text-neutral-400 uppercase tracking-wider mb-1 block text-center" style={{ fontSize: '14px' }}>
               Username
             </label>
             <input
@@ -133,7 +133,7 @@ export function HostCredentials({ onBack, onContinue, defaultUsername }: HostCre
                   <p className="text-neutral-200 text-base mb-1">
                     Join Code: <span className="text-green-500 font-mono tracking-widest text-xl">{joinCode}</span>
                   </p>
-                  <p className="text-neutral-500 text-xs">Share this code with your guests</p>
+                  <p className="text-neutral-500" style={{ fontSize: '14px' }}>Share this code with your guests</p>
                 </div>
                 <Button
                   onClick={handleShare}

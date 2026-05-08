@@ -65,7 +65,7 @@ export function Leaderboard({ players, myId, myMarkedSquares }: LeaderboardProps
 
   return (
     <div className="mt-5 w-full">
-      <p className="text-neutral-500 text-xs uppercase tracking-wider text-center mb-2">Leaderboard</p>
+      <p className="text-neutral-500 uppercase tracking-wider text-center mb-2" style={{ fontSize: '16px' }}>Leaderboard</p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
         {sorted.map((player, i) => {
           const isMe = player.id === myId;
@@ -81,7 +81,7 @@ export function Leaderboard({ players, myId, myMarkedSquares }: LeaderboardProps
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '3px', minWidth: 0 }}>
                   {medal && <span style={{ fontSize: '13px', lineHeight: 1, flexShrink: 0 }}>{medal}</span>}
-                  <span className={`text-xs font-mono truncate ${isMe ? 'text-green-400' : 'text-neutral-300'}`}>
+                  <span className={`font-mono truncate ${isMe ? 'text-green-400' : 'text-neutral-300'}`} style={{ fontSize: '14px' }}>
                     {label}
                   </span>
                 </div>
