@@ -31,119 +31,86 @@ const SPORTS: { label: string; value: Sport }[] = [
   { label: 'Hockey', value: 'hockey' },
 ];
 
-const MOCK_HOST_SESSION = (sport: Sport): SessionInfo => ({
-  sessionId: 0,
-  playerId: 0,
-  groupName: 'Dev Team',
-  initials: 'Dev',
-  isHost: true,
-  joinCode: 'DEVXXX',
+const MOCK_HOST_SESSION = (): SessionInfo => ({
+  sessionId: 0, playerId: 0, groupName: 'Dev Team', initials: 'Dev', isHost: true, joinCode: 'DEVXXX',
 });
 
-const MOCK_GUEST_SESSION = (sport: Sport): SessionInfo => ({
-  sessionId: 0,
-  playerId: 0,
-  groupName: 'Dev Team',
-  initials: 'Guest',
-  isHost: false,
-  joinCode: 'DEVXXX',
+const MOCK_GUEST_SESSION = (): SessionInfo => ({
+  sessionId: 0, playerId: 0, groupName: 'Dev Team', initials: 'Guest', isHost: false, joinCode: 'DEVXXX',
 });
+
+const S = {
+  wrap: { position: 'fixed', bottom: 16, right: 16, zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 } as React.CSSProperties,
+  panel: { background: '#18181b', border: '1px solid #52525b', borderRadius: 8, padding: 12, width: 280, maxHeight: '80vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' } as React.CSSProperties,
+  heading: { color: '#facc15', fontWeight: 'bold', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 } as React.CSSProperties,
+  section: { display: 'flex', flexDirection: 'column', gap: 4 } as React.CSSProperties,
+  label: { color: '#71717a', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 } as React.CSSProperties,
+  btnRow: { display: 'flex', flexWrap: 'wrap', gap: 4 } as React.CSSProperties,
+  btn: { background: '#3f3f46', color: '#e5e5e5', border: 'none', borderRadius: 4, padding: '3px 8px', fontSize: 11, cursor: 'pointer' } as React.CSSProperties,
+  btnGreen: { background: '#14532d', color: '#e5e5e5', border: 'none', borderRadius: 4, padding: '3px 8px', fontSize: 11, cursor: 'pointer' } as React.CSSProperties,
+  btnBlue: { background: '#1e3a5f', color: '#e5e5e5', border: 'none', borderRadius: 4, padding: '3px 8px', fontSize: 11, cursor: 'pointer' } as React.CSSProperties,
+  devBtn: { background: '#facc15', color: '#18181b', fontWeight: 'bold', borderRadius: '9999px', width: 40, height: 40, fontSize: 12, border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' } as React.CSSProperties,
+};
+
+const SCREENS: { label: string; view: DevView }[] = [
+  { label: 'Lobby', view: 'session-lobby' },
+  { label: 'FAQ', view: 'faq' },
+  { label: 'Sport Select', view: 'sport-selection' },
+  { label: 'Host Setup', view: 'host-credentials' },
+  { label: 'MP Login', view: 'multiplayer-code-login' },
+  { label: 'Guest Login', view: 'guest-login' },
+];
 
 export function DevNav({ onNavigate }: DevNavProps) {
   const [open, setOpen] = useState(false);
 
-  const go = (target: DevNavTarget) => {
-    onNavigate(target);
-    setOpen(false);
-  };
+  const go = (target: DevNavTarget) => { onNavigate(target); setOpen(false); };
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] flex flex-col items-end gap-2">
+    <div style={S.wrap}>
       {open && (
-        <div className="bg-zinc-900 border border-zinc-600 rounded-lg p-3 w-72 shadow-2xl text-xs flex flex-col gap-3 max-h-[80vh] overflow-y-auto">
+        <div style={S.panel}>
+          <span style={S.heading}>Dev Nav</span>
 
-          <p className="text-yellow-400 font-bold uppercase tracking-wider">Dev Nav</p>
-
-          {/* Screens */}
-          <div>
-            <p className="text-zinc-500 uppercase tracking-wider mb-1">Screens</p>
-            <div className="flex flex-wrap gap-1">
-              {[
-                { label: 'Lobby', view: 'session-lobby' as DevView },
-                { label: 'FAQ', view: 'faq' as DevView },
-                { label: 'Sport Selection', view: 'sport-selection' as DevView },
-                { label: 'Host Setup', view: 'host-credentials' as DevView },
-                { label: 'MP Login', view: 'multiplayer-code-login' as DevView },
-                { label: 'Guest Login', view: 'guest-login' as DevView },
-              ].map(({ label, view }) => (
-                <button
-                  key={view}
-                  onClick={() => go({ view, username: 'Dev' })}
-                  className="bg-zinc-700 hover:bg-zinc-600 text-neutral-200 rounded px-2 py-1"
-                >
-                  {label}
-                </button>
+          <div style={S.section}>
+            <span style={S.label}>Screens</span>
+            <div style={S.btnRow}>
+              {SCREENS.map(({ label, view }) => (
+                <button key={view} style={S.btn} onClick={() => go({ view, username: 'Dev' })}>{label}</button>
               ))}
             </div>
           </div>
 
-          {/* Solo boards */}
-          <div>
-            <p className="text-zinc-500 uppercase tracking-wider mb-1">Solo Board</p>
-            <div className="flex flex-wrap gap-1">
+          <div style={S.section}>
+            <span style={S.label}>Solo Board</span>
+            <div style={S.btnRow}>
               {SPORTS.map(({ label, value }) => (
-                <button
-                  key={value}
-                  onClick={() => go({ view: 'game', sport: value, sessionInfo: null, username: 'Dev' })}
-                  className="bg-zinc-700 hover:bg-zinc-600 text-neutral-200 rounded px-2 py-1"
-                >
-                  {label}
-                </button>
+                <button key={value} style={S.btn} onClick={() => go({ view: 'game', sport: value, sessionInfo: null, username: 'Dev' })}>{label}</button>
               ))}
             </div>
           </div>
 
-          {/* Host boards */}
-          <div>
-            <p className="text-zinc-500 uppercase tracking-wider mb-1">Host Board</p>
-            <div className="flex flex-wrap gap-1">
+          <div style={S.section}>
+            <span style={S.label}>Host Board</span>
+            <div style={S.btnRow}>
               {SPORTS.map(({ label, value }) => (
-                <button
-                  key={value}
-                  onClick={() => go({ view: 'game', sport: value, sessionInfo: MOCK_HOST_SESSION(value), username: 'Dev' })}
-                  className="bg-zinc-700 hover:bg-green-900 text-neutral-200 rounded px-2 py-1"
-                >
-                  {label}
-                </button>
+                <button key={value} style={S.btnGreen} onClick={() => go({ view: 'game', sport: value, sessionInfo: MOCK_HOST_SESSION(), username: 'Dev' })}>{label}</button>
               ))}
             </div>
           </div>
 
-          {/* Guest boards */}
-          <div>
-            <p className="text-zinc-500 uppercase tracking-wider mb-1">Guest Board</p>
-            <div className="flex flex-wrap gap-1">
+          <div style={S.section}>
+            <span style={S.label}>Guest Board</span>
+            <div style={S.btnRow}>
               {SPORTS.map(({ label, value }) => (
-                <button
-                  key={value}
-                  onClick={() => go({ view: 'game', sport: value, sessionInfo: MOCK_GUEST_SESSION(value), username: 'Guest' })}
-                  className="bg-zinc-700 hover:bg-blue-900 text-neutral-200 rounded px-2 py-1"
-                >
-                  {label}
-                </button>
+                <button key={value} style={S.btnBlue} onClick={() => go({ view: 'game', sport: value, sessionInfo: MOCK_GUEST_SESSION(), username: 'Guest' })}>{label}</button>
               ))}
             </div>
           </div>
-
         </div>
       )}
 
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="bg-yellow-400 hover:bg-yellow-300 text-zinc-900 font-bold rounded-full w-10 h-10 shadow-lg text-xs"
-      >
-        DEV
-      </button>
+      <button style={S.devBtn} onClick={() => setOpen(o => !o)}>DEV</button>
     </div>
   );
 }
