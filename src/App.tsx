@@ -4,7 +4,7 @@ import { SessionLobby } from './components/SessionLobby';
 import { HostCredentials } from './components/HostCredentials';
 import { MultiplayerCodeLogin } from './components/MultiplayerCodeLogin';
 import { GuestLogin } from './components/GuestLogin';
-import { BingoBoard } from './components/BingoBoard';
+import { BingoBoardV2 as BingoBoard } from './components/BingoBoardV2';
 import { FAQ } from './components/FAQ';
 import { useAuth } from './hooks/useAuth';
 import { createMultiplayerSession, loginAsHost, rejoinSession, joinSessionByCode } from './lib/sessions';
