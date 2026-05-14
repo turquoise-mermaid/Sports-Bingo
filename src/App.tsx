@@ -250,6 +250,8 @@ export default function App() {
   if (loading || !user || reconnecting) return null;
 
   return (
+    <>
+    {import.meta.env.DEV && <DevNav onNavigate={handleDevNavigate} />}
     <div className="min-h-screen bg-zinc-950 relative overflow-hidden">
       <div className="absolute inset-0" style={{ opacity: 0.03,
         backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.5) 10px, rgba(255,255,255,.5) 11px),
@@ -257,7 +259,6 @@ export default function App() {
       }}></div>
       <div className="absolute inset-0 bg-gradient-to-br from-zinc-900/50 via-neutral-950/80 to-stone-950/50"></div>
 
-      {import.meta.env.DEV && <DevNav onNavigate={handleDevNavigate} />}
       <div className="relative z-10">
         {view === 'session-lobby' && (
           <SessionLobby
@@ -313,5 +314,6 @@ export default function App() {
         )}
       </div>
     </div>
+    </>
   );
 }
