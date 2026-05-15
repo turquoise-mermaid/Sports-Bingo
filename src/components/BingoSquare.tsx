@@ -28,7 +28,7 @@ export function BingoSquare({ item, isMarked, isFreeSpace, onClick }: BingoSquar
       style={isFreeSpace || isMarked ? { background: 'linear-gradient(to bottom right, #17BB34, #14a12d)' } : undefined}
     >
       {/* Label */}
-      <span style={{ fontSize: '11px' }} className={`text-center leading-tight font-medium ${isMarked || isFreeSpace ? 'text-zinc-900' : 'text-neutral-200'}`}>
+      <span style={{ fontSize: '12px' }} className={`text-center leading-tight font-medium ${isMarked || isFreeSpace ? 'text-zinc-900' : 'text-neutral-200'}`}>
         {isFreeSpace ? 'FREE' : item.name}
       </span>
 

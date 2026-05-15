@@ -47,13 +47,15 @@ function checkBingo(marked: Set<number>): boolean {
   return WINNING_PATTERNS.some(p => p.every(i => marked.has(i)));
 }
 
-function generateBoardOrder(): number[] {
-  const indices = [...Array(12).keys(), ...Array.from({ length: 12 }, (_, i) => i + 13)];
-  for (let i = indices.length - 1; i > 0; i--) {
+function generateBoardOrder(totalItems: number): number[] {
+  const freeSpaceIdx = 12;
+  const available = Array.from({ length: totalItems }, (_, i) => i).filter(i => i !== freeSpaceIdx);
+  for (let i = available.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [indices[i], indices[j]] = [indices[j], indices[i]];
+    [available[i], available[j]] = [available[j], available[i]];
   }
-  return [...indices.slice(0, 12), 12, ...indices.slice(12)];
+  const selected = available.slice(0, 24);
+  return [...selected.slice(0, 12), freeSpaceIdx, ...selected.slice(12)];
 }
 
 function boardFromOrder(items: BingoItem[], order: number[]): BingoItem[] {
@@ -166,12 +168,12 @@ export function BingoBoardV2({ sport, sessionInfo, username, onBackToSports, onG
             return;
           }
         } catch { /* fall through to new board */ }
-        const order = generateBoardOrder();
+        const order = generateBoardOrder(items.length);
         setBoardOrder(order);
         setBingoItems(boardFromOrder(items, order));
         await savePlayerBoard(sessionInfo.playerId, order, [12]).catch(() => {});
       } else {
-        const order = generateBoardOrder();
+        const order = generateBoardOrder(items.length);
         setBoardOrder(order);
         setBingoItems(boardFromOrder(items, order));
       }
@@ -308,7 +310,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, onBackToSports, onG
 
   const handleRestart = () => {
     const items = getBingoItems(sport);
-    const order = generateBoardOrder();
+    const order = generateBoardOrder(items.length);
     setBoardOrder(order);
     setBingoItems(boardFromOrder(items, order));
     setMarkedSquares(new Set([12]));

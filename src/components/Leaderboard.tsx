@@ -81,7 +81,7 @@ export function Leaderboard({ players, myId, myMarkedSquares }: LeaderboardProps
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '3px', minWidth: 0 }}>
                   {medal && <span style={{ fontSize: '13px', lineHeight: 1, flexShrink: 0 }}>{medal}</span>}
-                  <span className={`font-mono truncate ${isMe ? 'text-green-400' : 'text-neutral-300'}`} style={{ fontSize: '14px' }}>
+                  <span className={`truncate ${isMe ? 'text-green-400' : 'text-neutral-400'}`} style={{ fontSize: '14px' }}>
                     {label}
                   </span>
                 </div>

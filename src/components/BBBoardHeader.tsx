@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import { ArrowLeft, RotateCcw, Share2, Info } from 'lucide-react';
 import { Sport, SessionInfo } from '../App';
 import { Button } from './ui/button';
@@ -45,23 +44,7 @@ export function BBBoardHeader({
 }: BBBoardHeaderProps) {
   return (
     <>
-      {/* Title block — solo only */}
-      {!isMultiplayer && (
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="text-center pt-2 mb-1"
-        >
-          <h2 className="text-green-500 uppercase tracking-wider text-base">
-            {SPORT_NAMES[sport].toUpperCase()} BINGO
-          </h2>
-          {username && (
-            <p className="text-neutral-500 mt-0.5" style={{ fontSize: '14px' }}>{username}'s Board</p>
-          )}
-        </motion.div>
-      )}
-
-      {/* Header row */}
+      {/* Header row — Back/action buttons always at the top */}
       <div className="relative flex items-center justify-between mb-1">
 
         {/* Left: Back + (i) + Start New Game */}
@@ -97,15 +80,13 @@ export function BBBoardHeader({
           )}
         </div>
 
-        {/* Center: sport title — multiplayer only, absolutely centered */}
-        {isMultiplayer && (
-          <h2
-            className="absolute text-green-500 uppercase tracking-wider text-base text-center whitespace-nowrap pointer-events-none"
-            style={{ left: '50%', transform: 'translateX(-50%)' }}
-          >
-            {SPORT_NAMES[sport].toUpperCase()} BINGO
-          </h2>
-        )}
+        {/* Center: sport title — absolutely centered */}
+        <h2
+          className="absolute text-green-500 uppercase tracking-wider text-base text-center whitespace-nowrap pointer-events-none"
+          style={{ left: '50%', transform: 'translateX(-50%)' }}
+        >
+          {SPORT_NAMES[sport].toUpperCase()} BINGO
+        </h2>
 
         {/* Right: Restart (solo) | Share + join code (host) | spacer (guest) */}
         {!isMultiplayer && (
@@ -123,7 +104,7 @@ export function BBBoardHeader({
             <Button
               onClick={onShare}
               variant="ghost"
-              className="text-neutral-300 hover:text-green-500 hover:bg-zinc-800 h-8 px-3 border border-zinc-700"
+              className="text-neutral-300 hover:text-green-500 hover:bg-zinc-800 h-8 px-3"
             >
               <Share2 className="w-4 h-4 mr-2" />
               <span style={{ fontSize: '14px' }}>{copied ? 'Copied!' : 'Share'}</span>
@@ -138,13 +119,19 @@ export function BBBoardHeader({
         {!imHost && isMultiplayer && <div className="w-16" />}
       </div>
 
-      {/* Multiplayer subtitle: team name + role/username */}
-      {isMultiplayer && (
+      {/* Subtitle row — team name + role (multiplayer) | username's Board (solo) */}
+      {isMultiplayer ? (
         <div className="text-center mb-1">
           <p className="text-green-500 uppercase tracking-wider font-bold" style={{ fontSize: '16px' }}>Team {sessionInfo?.groupName}</p>
           <p className="text-neutral-200 mt-0.5" style={{ fontSize: '14px' }}>
             {imHost ? `Host: ${username}` : `${sessionInfo?.initials}'s Board`}
           </p>
+        </div>
+      ) : (
+        <div className="text-center mb-1" style={{ height: '47px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          {username && (
+            <p className="text-neutral-200" style={{ fontSize: '14px' }}>{username}'s Board</p>
+          )}
         </div>
       )}
     </>
