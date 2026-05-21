@@ -18,7 +18,7 @@ const soccerItems: BingoItem[] = [
 { name: 'Throw-In', description: 'A player throws the ball back into play from the touchline after it goes out of bounds. ⚠️ "Touchline" = "Sideline" in US/MLS.' },
 { name: 'Assist', description: 'A pass or touch that directly leads to a goal being scored.' },
 { name: 'Red Card', description: 'A player is ejected from the match for serious misconduct or receiving two yellow cards.' },
-{ name: 'Free Kick', description: 'Play restarts after a foul with a kick from the spot where the infraction occurred.' },
+{ name: 'Free Kick', description: 'Play restarts after a foul with a kick awarded from the spot where the infraction occurred.' },
 { name: 'Cross', description: 'A player sends the ball from a wide position into the penalty area for teammates to attack.' },
 { name: 'Injury', description: 'A player goes down and requires medical attention on the pitch.' },
 //{ name: 'Hat Trick', description: 'One player scores three goals in a single match.' },
