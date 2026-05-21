@@ -6,6 +6,7 @@ import { MultiplayerCodeLogin } from './components/MultiplayerCodeLogin';
 import { GuestLogin } from './components/GuestLogin';
 import { BingoBoardV2 as BingoBoard } from './components/BingoBoardV2';
 import { FAQ } from './components/FAQ';
+// import { DevNav } from './components/DevNav';
 import { useAuth } from './hooks/useAuth';
 import { createMultiplayerSession, loginAsHost, rejoinSession, joinSessionByCode } from './lib/sessions';
 
@@ -313,6 +314,9 @@ export default function App() {
         )}
       </div>
     </div>
+    <p style={{ position: 'fixed', bottom: '12px', left: 0, right: 0, textAlign: 'center', fontSize: '11px', color: '#525252', zIndex: 9998 }}>
+      © 2026 Turquoise Sunrise LLC
+    </p>
     </>
   );
 }

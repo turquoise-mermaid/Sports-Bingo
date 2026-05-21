@@ -252,8 +252,8 @@ export function SessionLobby({ user: _user, onSolo, onMultiplayerCreate, onJoin,
       <div className="flex flex-col items-center gap-3 pb-8">
         <button
           onClick={onFaq}
-          className="text-neutral-500 hover:text-neutral-300 tracking-wider transition-colors"
-          style={{ fontSize: '14px' }}
+          className="text-neutral-400 hover:text-neutral-300 tracking-wider transition-colors"
+          style={{ fontSize: '14px', fontWeight: 'normal' }}
         >
           FAQs
         </button>
@@ -261,11 +261,12 @@ export function SessionLobby({ user: _user, onSolo, onMultiplayerCreate, onJoin,
           href="https://github.com/turquoise-mermaid/Sports-Bingo/issues/new"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-neutral-500 hover:text-neutral-300 uppercase tracking-wider transition-colors"
+          className="text-neutral-400 hover:text-neutral-300 uppercase tracking-wider transition-colors"
           style={{ fontSize: '14px' }}
         >
           Submit an Issue
         </a>
+
       </div>
 
       {/* Info bottom sheet */}
