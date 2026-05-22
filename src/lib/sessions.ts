@@ -3,10 +3,11 @@ import { Sport } from '../App';
 import { getBingoItems } from '../components/bingoDataNoIcons';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
+
 export interface PlayerRow {
   id: number;
   player_number: number;
-  marked_squares: number[];
+  marked_squares: number[] | null;
   initials?: string;
   is_host?: boolean;
   joined_at?: string;
