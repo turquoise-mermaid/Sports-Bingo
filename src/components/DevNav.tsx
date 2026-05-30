@@ -9,6 +9,7 @@ type DevView =
   | 'host-credentials'
   | 'multiplayer-code-login'
   | 'guest-login'
+  | 'login'
   | 'game';
 
 interface DevNavTarget {
@@ -54,6 +55,7 @@ const S = {
 
 const SCREENS: { label: string; view: DevView }[] = [
   { label: 'Lobby', view: 'session-lobby' },
+  { label: 'Login', view: 'login' },
   { label: 'FAQ', view: 'faq' },
   { label: 'Sport Select', view: 'sport-selection' },
   { label: 'Host Setup', view: 'host-credentials' },

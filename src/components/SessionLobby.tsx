@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Info } from 'lucide-react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
@@ -6,6 +6,7 @@ import { Button } from './ui/button';
 
 interface SessionLobbyProps {
   user: SupabaseUser;
+  defaultUsername?: string;
   onSolo: (username: string) => void;
   onMultiplayerCreate: (username: string) => void;
   onJoin: (username: string, code: string) => Promise<void>;
@@ -38,8 +39,12 @@ function titleCase(val: string): string {
     .join(' ');
 }
 
-export function SessionLobby({ user: _user, onSolo, onMultiplayerCreate, onJoin, onFaq, onPrivacyPolicy }: SessionLobbyProps) {
-  const [username, setUsername] = useState('');
+export function SessionLobby({ user: _user, defaultUsername, onSolo, onMultiplayerCreate, onJoin, onFaq, onPrivacyPolicy }: SessionLobbyProps) {
+  const [username, setUsername] = useState(defaultUsername ?? '');
+
+  useEffect(() => {
+    if (defaultUsername && !username) setUsername(defaultUsername);
+  }, [defaultUsername]);
   const [showUsernameError, setShowUsernameError] = useState(false);
   const [infoPopup, setInfoPopup] = useState<'solo' | 'multiplayer' | 'join' | null>(null);
   const [joinExpanded, setJoinExpanded] = useState(false);

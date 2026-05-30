@@ -5,11 +5,14 @@ import { HostCredentials } from './components/HostCredentials';
 import { MultiplayerCodeLogin } from './components/MultiplayerCodeLogin';
 import { GuestLogin } from './components/GuestLogin';
 import { BingoBoardV2 as BingoBoard } from './components/BingoBoardV2';
+import { FirstUseGameBoard } from './components/FirstUseGameBoard';
 import { FAQ } from './components/FAQ';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
-// import { DevNav } from './components/DevNav';
+import { LoginPage } from './components/LoginPage';
+import { DevNav } from './components/DevNav';
 import { useAuth } from './hooks/useAuth';
 import { createMultiplayerSession, loginAsHost, rejoinSession, joinSessionByCode } from './lib/sessions';
+import { supabase } from './lib/supabase';
 
 export type Sport = 'soccer' | 'americanFootball' | 'baseball' | 'basketball' | 'rugby' | 'hockey';
 
@@ -19,6 +22,7 @@ type AppView =
   | 'host-credentials'
   | 'multiplayer-code-login'
   | 'guest-login'
+  | 'login'
   | 'faq'
   | 'privacy-policy'
   | 'game';
@@ -60,13 +64,19 @@ function loadSession(): StoredSession | null {
 }
 
 export default function App() {
-  const { user, loading } = useAuth();
+  const { user, loading, userRole, savedDisplayName } = useAuth();
   const [view, setView] = useState<AppView>('session-lobby');
   const [sessionMode, setSessionMode] = useState<SessionMode>('solo');
   const [selectedSport, setSelectedSport] = useState<Sport | null>(null);
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
   const [username, setUsername] = useState('');
   const [defaultJoinCode, setDefaultJoinCode] = useState<string | undefined>(undefined);
+  const [loginMode, setLoginMode] = useState<'signin' | 'signup'>('signin');
+  const [firstUseWon, setFirstUseWon] = useState(false);
+
+  useEffect(() => {
+    if (savedDisplayName && !username) setUsername(savedDisplayName);
+  }, [savedDisplayName]);
 
   const [reconnecting, setReconnecting] = useState(() => {
     const params = new URLSearchParams(window.location.search);
@@ -133,15 +143,22 @@ export default function App() {
     reconnect();
   }, [user, loading]);
 
+  const persistDisplayName = (name: string) => {
+    if (!user || user.is_anonymous) return;
+    supabase.from('profiles').update({ display_name: name }).eq('id', user.id);
+  };
+
   // --- Session Lobby ---
   const handleSolo = (name: string) => {
     setUsername(name);
+    persistDisplayName(name);
     setSessionMode('solo');
     setView('sport-selection');
   };
 
   const handleMultiplayerCreate = (name: string) => {
     setUsername(name);
+    persistDisplayName(name);
     setSessionMode('multiplayer-create');
     setView('sport-selection');
   };
@@ -150,6 +167,7 @@ export default function App() {
     if (!user) return;
     const { session, player } = await joinSessionByCode(code, user.id, name);
     setUsername(name);
+    persistDisplayName(name);
     setSelectedSport(session.sport as Sport);
     setSessionInfo({
       sessionId: session.id,
@@ -240,20 +258,20 @@ export default function App() {
     setView('multiplayer-code-login');
   };
 
-  // const handleDevNavigate = ({ view, sport, sessionInfo: si, username: un }: {
-  //   view: AppView; sport?: Sport; sessionInfo?: SessionInfo | null; username?: string;
-  // }) => {
-  //   if (sport !== undefined) setSelectedSport(sport);
-  //   if (si !== undefined) setSessionInfo(si);
-  //   if (un !== undefined) setUsername(un);
-  //   setView(view);
-  // };
+  const handleDevNavigate = ({ view, sport, sessionInfo: si, username: un }: {
+    view: AppView; sport?: Sport; sessionInfo?: SessionInfo | null; username?: string;
+  }) => {
+    if (sport !== undefined) setSelectedSport(sport);
+    if (si !== undefined) setSessionInfo(si);
+    if (un !== undefined) setUsername(un);
+    setView(view);
+  };
 
   if (loading || !user || reconnecting) return null;
 
   return (
     <>
-    {/* import.meta.env.DEV && <DevNav onNavigate={handleDevNavigate} /> */}
+    {import.meta.env.DEV && <DevNav onNavigate={handleDevNavigate} />}
     <div className="min-h-screen bg-zinc-950 relative overflow-hidden">
       <div className="absolute inset-0" style={{ opacity: 0.03,
         backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.5) 10px, rgba(255,255,255,.5) 11px),
@@ -265,6 +283,7 @@ export default function App() {
         {view === 'session-lobby' && (
           <SessionLobby
             user={user}
+            defaultUsername={username}
             onSolo={handleSolo}
             onMultiplayerCreate={handleMultiplayerCreate}
             onJoin={handleJoin}
@@ -277,6 +296,14 @@ export default function App() {
         )}
         {view === 'privacy-policy' && (
           <PrivacyPolicy onBack={handleBackToLobby} />
+        )}
+        {view === 'login' && (
+          <LoginPage
+            defaultMode={loginMode}
+            onSuccess={() => { setFirstUseWon(false); setView('session-lobby'); }}
+            onContinueAsGuest={() => { setFirstUseWon(false); setView('session-lobby'); }}
+            onBack={() => { firstUseWon ? setView('game') : handleBackToLobby(); }}
+          />
         )}
         {view === 'sport-selection' && (
           <SportSelection onSelectSport={handleSportSelect} onBack={handleBackToLobby} />
@@ -306,17 +333,28 @@ export default function App() {
           />
         )}
         {view === 'game' && selectedSport && (
-          <BingoBoard
-            sport={selectedSport}
-            sessionInfo={sessionInfo}
-            username={username}
-            onBackToSports={
-              sessionInfo
-                ? handleBackToMultiplayerLogin
-                : handleBackToSportSelection
-            }
-            onGameEnd={handleBackToLobby}
-          />
+          (user?.is_anonymous && !sessionInfo) ? (
+            <FirstUseGameBoard
+              sport={selectedSport}
+              username={username}
+              initialHasBingo={firstUseWon}
+              onShowLogin={(mode) => { setFirstUseWon(true); setLoginMode(mode); setView('login'); }}
+              onBack={handleBackToSportSelection}
+              onBackToLobby={() => { setUsername(''); setFirstUseWon(false); setView('session-lobby'); }}
+            />
+          ) : (
+            <BingoBoard
+              sport={selectedSport}
+              sessionInfo={sessionInfo}
+              username={username}
+              onBackToSports={
+                sessionInfo
+                  ? handleBackToMultiplayerLogin
+                  : handleBackToSportSelection
+              }
+              onGameEnd={handleBackToLobby}
+            />
+          )
         )}
       </div>
     </div>
