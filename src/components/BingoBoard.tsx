@@ -491,7 +491,7 @@ export function BingoBoard({ sport, sessionInfo, username, onBackToSports, onGam
             className="text-neutral-300 hover:bg-zinc-800 hover:text-green-500 h-8 px-3"
           >
             <RotateCcw className="w-4 h-4 mr-1" />
-            Restart
+            Shuffle
           </Button>
         )}
         {imHost && (

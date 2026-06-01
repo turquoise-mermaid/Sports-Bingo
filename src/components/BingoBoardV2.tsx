@@ -397,7 +397,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, onBackToSports, onG
       <AnimatePresence>
         {showRestartConfirm && (
           <WinOrExpirePopup
-            title="Start a New Board?"
+            title="Shuffle Your Board?"
             message="This will shuffle your board and clear your progress."
             onYes={() => { handleRestart(); setShowRestartConfirm(false); }}
             onNo={() => setShowRestartConfirm(false)}

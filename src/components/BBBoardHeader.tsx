@@ -76,7 +76,7 @@ export function BBBoardHeader({
               style={{ fontSize: '14px' }}
             >
               <RotateCcw className="w-3 h-3 mr-1" />
-              Restart
+              Shuffle
             </Button>
           )}
           {hasBingo && isMultiplayer && !showMultiplayerWin && (
