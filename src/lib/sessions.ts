@@ -17,7 +17,7 @@ export async function createSession(sport: Sport, userId: string) {
   const terms = getBingoItems(sport);
 
   const { data: session, error: sessionError } = await supabase
-    .from('sessions')
+    .from('sessions_multi')
     .insert({
       sport,
       terms,
@@ -31,7 +31,7 @@ export async function createSession(sport: Sport, userId: string) {
   if (sessionError) throw sessionError;
 
   const { data: player, error: playerError } = await supabase
-    .from('players')
+    .from('players_multi')
     .insert({
       session_id: session.id,
       player_number: 1,
@@ -47,7 +47,7 @@ export async function createSession(sport: Sport, userId: string) {
 
 export async function joinSession(sessionId: number, userId: string) {
   const { data: session, error: sessionError } = await supabase
-    .from('sessions')
+    .from('sessions_multi')
     .select()
     .eq('id', sessionId)
     .eq('status', 'active')
@@ -57,12 +57,12 @@ export async function joinSession(sessionId: number, userId: string) {
   if (sessionError || !session) throw new Error('Session not found or expired');
 
   const { count } = await supabase
-    .from('players')
+    .from('players_multi')
     .select('*', { count: 'exact', head: true })
     .eq('session_id', sessionId);
 
   const { data: player, error: playerError } = await supabase
-    .from('players')
+    .from('players_multi')
     .insert({
       session_id: sessionId,
       player_number: (count ?? 0) + 1,
@@ -87,7 +87,7 @@ export async function createMultiplayerSession(
   const now = new Date();
 
   const { data: session, error: sessionError } = await supabase
-    .from('sessions')
+    .from('sessions_multi')
     .insert({
       sport,
       terms,
@@ -104,7 +104,7 @@ export async function createMultiplayerSession(
   if (sessionError) throw sessionError;
 
   const { data: player, error: playerError } = await supabase
-    .from('players')
+    .from('players_multi')
     .insert({
       session_id: session.id,
       player_number: 1,
@@ -123,7 +123,7 @@ export async function createMultiplayerSession(
 
 export async function joinSessionByCode(joinCode: string, userId: string, initials: string) {
   const { data: sessions, error: sessionError } = await supabase
-    .from('sessions')
+    .from('sessions_multi')
     .select('id, sport, group_name, join_code, status, expires_at')
     .eq('join_code', joinCode)
     .eq('status', 'active')
@@ -134,7 +134,7 @@ export async function joinSessionByCode(joinCode: string, userId: string, initia
   if (sessionError || !session) throw new Error('Session not found or expired');
 
   const { count, error: countError } = await supabase
-    .from('players')
+    .from('players_multi')
     .select('*', { count: 'exact', head: true })
     .eq('session_id', session.id);
 
@@ -144,7 +144,7 @@ export async function joinSessionByCode(joinCode: string, userId: string, initia
   const now = new Date().toISOString();
   const nextPlayerNumber = (count ?? 0) + 1;
   const { data: players, error: playerError } = await supabase
-    .from('players')
+    .from('players_multi')
     .insert({
       session_id: session.id,
       player_number: nextPlayerNumber,
@@ -165,7 +165,7 @@ export async function joinSessionByCode(joinCode: string, userId: string, initia
 
 export async function rejoinSession(joinCode: string, userId: string) {
   const { data: sessions, error: sessionError } = await supabase
-    .from('sessions')
+    .from('sessions_multi')
     .select('id, sport, group_name, join_code, status, expires_at')
     .eq('join_code', joinCode)
     .eq('status', 'active')
@@ -176,7 +176,7 @@ export async function rejoinSession(joinCode: string, userId: string) {
   if (sessionError || !session) throw new Error('Session not found or expired.');
 
   const { data: players, error: playerError } = await supabase
-    .from('players')
+    .from('players_multi')
     .select()
     .eq('session_id', session.id)
     .eq('anonymous_id', userId)
@@ -191,7 +191,7 @@ export async function rejoinSession(joinCode: string, userId: string) {
 
 export async function loginAsHost(joinCode: string, userId: string) {
   const { data: sessions, error } = await supabase
-    .from('sessions')
+    .from('sessions_multi')
     .select('id, sport, group_name, join_code, status, expires_at')
     .eq('join_code', joinCode)
     .eq('status', 'active')
@@ -202,7 +202,7 @@ export async function loginAsHost(joinCode: string, userId: string) {
   if (error || !session) throw new Error('Session not found or expired');
 
   const { data: players, error: playersError } = await supabase
-    .from('players')
+    .from('players_multi')
     .select()
     .eq('session_id', session.id)
     .eq('anonymous_id', userId)
@@ -221,13 +221,13 @@ export async function savePlayerBoard(
 ) {
   const update: Record<string, unknown> = { board_order: boardOrder, marked_squares: markedSquares };
   if (lastMarkedAt) update.last_marked_at = lastMarkedAt;
-  const { error } = await supabase.from('players').update(update).eq('id', playerId);
+  const { error } = await supabase.from('players_multi').update(update).eq('id', playerId);
   if (error) throw error;
 }
 
 export async function loadPlayerBoard(playerId: number) {
   const { data, error } = await supabase
-    .from('players')
+    .from('players_multi')
     .select('board_order, marked_squares')
     .eq('id', playerId)
     .single();
@@ -237,7 +237,7 @@ export async function loadPlayerBoard(playerId: number) {
 
 export async function getSessionPlayers(sessionId: number): Promise<PlayerRow[]> {
   const { data, error } = await supabase
-    .from('players')
+    .from('players_multi')
     .select('id, player_number, initials, is_host, joined_at, marked_squares, last_marked_at')
     .eq('session_id', sessionId)
     .order('joined_at', { ascending: true });
@@ -247,7 +247,7 @@ export async function getSessionPlayers(sessionId: number): Promise<PlayerRow[]>
 
 export async function getSessionById(sessionId: number) {
   const { data, error } = await supabase
-    .from('sessions')
+    .from('sessions_multi')
     .select('id, sport, group_name, join_code, started_at, expires_at, status')
     .eq('id', sessionId)
     .single();
@@ -266,7 +266,7 @@ export function subscribeToSessionPlayers(
       {
         event: 'INSERT',
         schema: 'public',
-        table: 'players',
+        table: 'players_multi',
         filter: `session_id=eq.${sessionId}`,
       },
       (payload) => onUpdate(payload.new as PlayerRow)
@@ -276,7 +276,7 @@ export function subscribeToSessionPlayers(
       {
         event: 'UPDATE',
         schema: 'public',
-        table: 'players',
+        table: 'players_multi',
         filter: `session_id=eq.${sessionId}`,
       },
       (payload) => onUpdate(payload.new as PlayerRow)

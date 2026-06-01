@@ -19,11 +19,14 @@ import { Leaderboard } from './Leaderboard';
 import { BBBoardHeader } from './BBBoardHeader';
 import { BBBackInfoSheet } from './BBBackInfoSheet';
 import { BBExpandedSquareSheet } from './BBExpandedSquareSheet';
+import { logEvent } from '../lib/analytics';
 
 interface BingoBoardV2Props {
   sport: Sport;
   sessionInfo: SessionInfo | null;
   username?: string;
+  userId?: string;
+  isDev?: boolean;
   onBackToSports: () => void;
   onGameEnd: () => void;
 }
@@ -108,7 +111,7 @@ function WinOrExpirePopup({
   );
 }
 
-export function BingoBoardV2({ sport, sessionInfo, username, onBackToSports, onGameEnd }: BingoBoardV2Props) {
+export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, onBackToSports, onGameEnd }: BingoBoardV2Props) {
   const isMultiplayer = !!sessionInfo;
   const imHost = !!sessionInfo?.isHost;
 
@@ -179,6 +182,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, onBackToSports, onG
         setBingoItems(boardFromOrder(items, order));
       }
       setBoardReady(true);
+      logEvent({ eventType: 'game_started', sport, isMultiplayer: !!sessionInfo, userId, sessionId: sessionInfo?.sessionId, playerId: sessionInfo?.playerId }, isDev ?? false);
     }
     init();
   }, [sport, sessionInfo]);
@@ -283,6 +287,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, onBackToSports, onG
   useEffect(() => {
     if (!checkBingo(markedSquares) || hasBingo) return;
     setHasBingo(true);
+    logEvent({ eventType: 'bingo_achieved', sport, isMultiplayer: !!sessionInfo, userId, sessionId: sessionInfo?.sessionId, playerId: sessionInfo?.playerId }, isDev ?? false);
     if (!isMultiplayer) {
       setShowBingoMessage(true);
       setTimeout(() => setShowBingoMessage(false), 3000);
@@ -310,6 +315,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, onBackToSports, onG
   };
 
   const handleRestart = () => {
+    logEvent({ eventType: 'board_shuffled', sport, isMultiplayer: !!sessionInfo, hadBingo: hasBingo, userId, sessionId: sessionInfo?.sessionId, playerId: sessionInfo?.playerId }, isDev ?? false);
     const items = getBingoItems(sport);
     const order = generateBoardOrder(items.length);
     setBoardOrder(order);
@@ -347,6 +353,16 @@ export function BingoBoardV2({ sport, sessionInfo, username, onBackToSports, onG
   }
 
   const expandedItem = expandedSquare !== null ? bingoItems[expandedSquare] : null;
+
+  const handleExitToSports = () => {
+    logEvent({ eventType: 'game_exited', sport, isMultiplayer: !!sessionInfo, hadBingo: hasBingo, userId, sessionId: sessionInfo?.sessionId, playerId: sessionInfo?.playerId }, isDev ?? false);
+    onBackToSports();
+  };
+
+  const handleExitGame = () => {
+    logEvent({ eventType: 'game_exited', sport, isMultiplayer: !!sessionInfo, hadBingo: hasBingo, userId, sessionId: sessionInfo?.sessionId, playerId: sessionInfo?.playerId }, isDev ?? false);
+    onGameEnd();
+  };
 
   return (
     <div className="min-h-screen p-4 flex flex-col">
@@ -437,8 +453,8 @@ export function BingoBoardV2({ sport, sessionInfo, username, onBackToSports, onG
         hasBingo={hasBingo}
         showMultiplayerWin={showMultiplayerWin}
         copied={copied}
-        onBackToSports={onBackToSports}
-        onGameEnd={onGameEnd}
+        onBackToSports={handleExitToSports}
+        onGameEnd={handleExitGame}
         onShowBackInfo={() => setShowBackInfo(true)}
         onShare={handleShare}
         onRestart={() => setShowRestartConfirm(true)}
@@ -458,10 +474,13 @@ export function BingoBoardV2({ sport, sessionInfo, username, onBackToSports, onG
               index={index}
               isMarked={markedSquares.has(index)}
               isFreeSpace={index === 12}
-              onClick={() => { if (index !== 12) setExpandedSquare(index); }}
+              onClick={() => {
+                if (index === 12) return;
+                if (doubleClickEnabled && !markedSquares.has(index)) handleConfirmMark(index);
+                setExpandedSquare(index);
+              }}
               onDoubleClick={doubleClickEnabled && index !== 12 ? () => {
                 if (markedSquares.has(index)) handleConfirmUnmark(index);
-                else handleConfirmMark(index);
                 setExpandedSquare(index);
               } : undefined}
             />

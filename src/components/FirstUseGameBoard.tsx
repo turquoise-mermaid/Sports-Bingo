@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Trophy } from 'lucide-react';
 import { Sport } from '../App';
@@ -7,6 +7,7 @@ import { BBExpandedSquareSheet } from './BBExpandedSquareSheet';
 import { getBingoItems, BingoItem } from './bingoDataNoIcons';
 import { Confetti } from './Confetti';
 import { Button } from './ui/button';
+import { logEvent } from '../lib/analytics';
 
 const SPORT_NAMES: Record<Sport, string> = {
   soccer: 'Soccer',
@@ -53,13 +54,15 @@ function boardFromOrder(items: BingoItem[], order: number[]): (BingoItem | null)
 interface FirstUseGameBoardProps {
   sport: Sport;
   username?: string;
+  userId?: string;
+  isDev?: boolean;
   onShowLogin: (mode: 'signin' | 'signup') => void;
   onBack: () => void;
   onBackToLobby: () => void;
   initialHasBingo?: boolean;
 }
 
-export function FirstUseGameBoard({ sport, username, onShowLogin, onBack, onBackToLobby, initialHasBingo }: FirstUseGameBoardProps) {
+export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin, onBack, onBackToLobby, initialHasBingo }: FirstUseGameBoardProps) {
   const [bingoItems, setBingoItems] = useState<(BingoItem | null)[]>([]);
   const [markedSquares, setMarkedSquares] = useState<Set<number>>(new Set([12]));
   const [expandedSquare, setExpandedSquare] = useState<number | null>(null);
@@ -68,16 +71,22 @@ export function FirstUseGameBoard({ sport, username, onShowLogin, onBack, onBack
   const [showSignUpCard, setShowSignUpCard] = useState(initialHasBingo ?? false);
   const [showThankYou, setShowThankYou] = useState(false);
   const [showCloseMessage, setShowCloseMessage] = useState(false);
+  const gameStartedLogged = useRef(false);
 
   useEffect(() => {
     const items = getBingoItems(sport);
     const order = generateBoardOrder(items.length);
     setBingoItems(boardFromOrder(items, order));
+    if (!initialHasBingo && !gameStartedLogged.current) {
+      gameStartedLogged.current = true;
+      logEvent({ eventType: 'game_started', sport, isMultiplayer: false, userId }, isDev ?? false);
+    }
   }, [sport]);
 
   useEffect(() => {
     if (!checkBingo(markedSquares) || hasBingo) return;
     setHasBingo(true);
+    logEvent({ eventType: 'bingo_achieved', sport, isMultiplayer: false, userId }, isDev ?? false);
     setShowBanner(true);
     setTimeout(() => setShowSignUpCard(true), 1000);
   }, [markedSquares]);
@@ -96,8 +105,14 @@ export function FirstUseGameBoard({ sport, username, onShowLogin, onBack, onBack
     if (hasBingo) {
       onShowLogin('signup');
     } else {
+      logEvent({ eventType: 'game_exited', sport, isMultiplayer: false, hadBingo: false, userId }, isDev ?? false);
       onBack();
     }
+  };
+
+  const handleBackToLobby = () => {
+    logEvent({ eventType: 'game_exited', sport, isMultiplayer: false, hadBingo: hasBingo, userId }, isDev ?? false);
+    onBackToLobby();
   };
 
   const handleNo = () => {
@@ -218,7 +233,7 @@ export function FirstUseGameBoard({ sport, username, onShowLogin, onBack, onBack
                             You can close this tab.
                           </p>
                           <Button
-                            onClick={onBackToLobby}
+                            onClick={handleBackToLobby}
                             className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-zinc-900 h-10"
                           >
                             Back to Lobby
@@ -234,7 +249,7 @@ export function FirstUseGameBoard({ sport, username, onShowLogin, onBack, onBack
                             Exit Application
                           </Button>
                           <Button
-                            onClick={onBackToLobby}
+                            onClick={handleBackToLobby}
                             className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-zinc-900 h-10"
                           >
                             Back to Lobby

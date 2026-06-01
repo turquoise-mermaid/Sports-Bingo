@@ -15,6 +15,7 @@ import { DevNav } from './components/DevNav';
 import { useAuth } from './hooks/useAuth';
 import { createMultiplayerSession, loginAsHost, rejoinSession, joinSessionByCode } from './lib/sessions';
 import { supabase } from './lib/supabase';
+import { logEvent } from './lib/analytics';
 
 export type Sport = 'soccer' | 'americanFootball' | 'baseball' | 'basketball' | 'rugby' | 'hockey';
 
@@ -77,6 +78,7 @@ export default function App() {
   const [defaultJoinCode, setDefaultJoinCode] = useState<string | undefined>(undefined);
   const [loginMode, setLoginMode] = useState<'signin' | 'signup'>('signin');
   const [firstUseWon, setFirstUseWon] = useState(false);
+  const isDev = import.meta.env.DEV || userRole === 'dev';
 
   useEffect(() => {
     if (savedDisplayName && !username) setUsername(savedDisplayName);
@@ -198,6 +200,7 @@ export default function App() {
   // --- Sport Selection ---
   const handleSportSelect = (sport: Sport) => {
     setSelectedSport(sport);
+    logEvent({ eventType: 'sport_selected', sport, isMultiplayer: sessionMode === 'multiplayer-create', userId: user?.id }, isDev);
     if (sessionMode === 'multiplayer-create') {
       setView('host-credentials');
     } else {
@@ -374,6 +377,8 @@ export default function App() {
               sport={selectedSport}
               username={username}
               initialHasBingo={firstUseWon}
+              userId={user?.id}
+              isDev={isDev}
               onShowLogin={(mode) => { setFirstUseWon(true); setLoginMode(mode); setView('login'); }}
               onBack={handleBackToSportSelection}
               onBackToLobby={() => { setUsername(''); setFirstUseWon(false); setView('session-lobby'); }}
@@ -383,6 +388,8 @@ export default function App() {
               sport={selectedSport}
               sessionInfo={sessionInfo}
               username={username}
+              userId={user?.id}
+              isDev={isDev}
               onBackToSports={
                 sessionInfo
                   ? handleBackToMultiplayerLogin
