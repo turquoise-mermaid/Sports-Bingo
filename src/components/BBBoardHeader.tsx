@@ -47,7 +47,7 @@ export function BBBoardHeader({
       {/* Header row — Back/action buttons always at the top */}
       <div className="relative flex items-center justify-between mb-1">
 
-        {/* Left: Back + (i) + Start New Game */}
+        {/* Left: Back + (i) + Restart (host) + Start New Game */}
         <div className="flex flex-col items-start gap-0.5">
           <div className="flex items-center gap-1">
             <Button
@@ -68,6 +68,17 @@ export function BBBoardHeader({
               </button>
             )}
           </div>
+          {imHost && (
+            <Button
+              onClick={onRestart}
+              variant="ghost"
+              className="text-neutral-300 hover:bg-zinc-800 hover:text-green-500 h-7 px-3"
+              style={{ fontSize: '14px' }}
+            >
+              <RotateCcw className="w-3 h-3 mr-1" />
+              Restart
+            </Button>
+          )}
           {hasBingo && isMultiplayer && !showMultiplayerWin && (
             <Button
               onClick={onGameEnd}
@@ -116,7 +127,16 @@ export function BBBoardHeader({
             )}
           </div>
         )}
-        {!imHost && isMultiplayer && <div className="w-16" />}
+        {!imHost && isMultiplayer && (
+          <Button
+            onClick={onRestart}
+            variant="ghost"
+            className="text-neutral-300 hover:bg-zinc-800 hover:text-green-500 h-8 px-3"
+          >
+            <RotateCcw className="w-4 h-4 mr-1" />
+            Restart
+          </Button>
+        )}
       </div>
 
       {/* Subtitle row — team name + role (multiplayer) | username's Board (solo) */}

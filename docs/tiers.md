@@ -9,17 +9,21 @@
 
 ## Free Account
 - Unlimited games at the current feature set
+- Get three refreshes, must watch an add for more
+- 
 - Can see premium features (Create Your Own, league filters, Blackout Bingo) but they are grayed out
 - No cost — requires email registration only
 
 ## Pass (Single Purchase)
-- Temporary access to premium features: 3-hour, 6-hour, 24-hour, or weekend options
+- Temporary access to premium features: 3-hour, 6-hour (), 24-hour (), or weekend (14.99) options
 - Access to Create Your Own board
 - Custom terms/categories submitted via Create Your Own are NOT eligible for consideration in the main term library (premium-only feature)
 - Access to league filters and Blackout Bingo for the duration of the pass
 
 ## Premium (Subscription)
+- $24.99 per month
 - Full access to all features
+- No other user can have your username
 - Create Your Own board with custom term submission for consideration in the main library
 - League filters (major/minor league dropdowns)
 - Blackout Bingo mode (available after winning traditional Bingo)

@@ -9,6 +9,7 @@ interface BingoSquareProps {
   isMarked: boolean;
   isFreeSpace: boolean;
   onClick: () => void;
+  onDoubleClick?: () => void;
 }
 
 const DISPLAY_REPLACEMENTS: [RegExp, string][] = [
@@ -31,12 +32,13 @@ function displayName(name: string): string {
   return DISPLAY_REPLACEMENTS.reduce((s, [pattern, replacement]) => s.replace(pattern, replacement), name);
 }
 
-export function BingoSquare({ item, isMarked, isFreeSpace, onClick }: BingoSquareProps) {
+export function BingoSquare({ item, isMarked, isFreeSpace, onClick, onDoubleClick }: BingoSquareProps) {
   return (
     <motion.button
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
       className={`
         relative aspect-square rounded p-1.5 flex flex-col items-center justify-center
         transition-all duration-300

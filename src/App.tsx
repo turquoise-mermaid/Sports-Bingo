@@ -8,6 +8,8 @@ import { BingoBoardV2 as BingoBoard } from './components/BingoBoardV2';
 import { FirstUseGameBoard } from './components/FirstUseGameBoard';
 import { FAQ } from './components/FAQ';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
+import { TermsOfService } from './components/TermsOfService';
+import { AccountPage } from './components/AccountPage';
 import { LoginPage } from './components/LoginPage';
 import { DevNav } from './components/DevNav';
 import { useAuth } from './hooks/useAuth';
@@ -25,6 +27,8 @@ type AppView =
   | 'login'
   | 'faq'
   | 'privacy-policy'
+  | 'terms-of-service'
+  | 'account'
   | 'game';
 
 type SessionMode = 'solo' | 'multiplayer-create';
@@ -77,6 +81,16 @@ export default function App() {
   useEffect(() => {
     if (savedDisplayName && !username) setUsername(savedDisplayName);
   }, [savedDisplayName]);
+
+  const prevIsAnonymousRef = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    const wasAnonymous = prevIsAnonymousRef.current;
+    prevIsAnonymousRef.current = user.is_anonymous;
+    if (wasAnonymous === true && !user.is_anonymous && username) {
+      supabase.from('profiles').update({ display_name: username }).eq('id', user.id);
+    }
+  }, [user]);
 
   const [reconnecting, setReconnecting] = useState(() => {
     const params = new URLSearchParams(window.location.search);
@@ -214,6 +228,8 @@ export default function App() {
       isHost: true,
       joinCode,
     });
+    setUsername(initials);
+    persistDisplayName(initials);
     saveSession(joinCode, true);
     setView('game');
   };
@@ -289,6 +305,10 @@ export default function App() {
             onJoin={handleJoin}
             onFaq={() => setView('faq')}
             onPrivacyPolicy={() => setView('privacy-policy')}
+            onTermsOfService={() => setView('terms-of-service')}
+            onAccount={() => setView('account')}
+            onShowLogin={(mode) => { setLoginMode(mode); setView('login'); }}
+            onSaveName={(name) => { setUsername(name); persistDisplayName(name); }}
           />
         )}
         {view === 'faq' && (
@@ -296,6 +316,22 @@ export default function App() {
         )}
         {view === 'privacy-policy' && (
           <PrivacyPolicy onBack={handleBackToLobby} />
+        )}
+        {view === 'terms-of-service' && (
+          <TermsOfService onBack={handleBackToLobby} />
+        )}
+        {view === 'account' && (
+          <AccountPage
+            displayName={username}
+            email={user.email ?? ''}
+            role={userRole}
+            onBack={handleBackToLobby}
+            onSignOut={async () => {
+              await supabase.auth.signOut();
+              setUsername('');
+              setView('session-lobby');
+            }}
+          />
         )}
         {view === 'login' && (
           <LoginPage
@@ -356,11 +392,11 @@ export default function App() {
             />
           )
         )}
+        <p style={{ position: 'fixed', bottom: '12px', left: 0, right: 0, textAlign: 'center', fontSize: '11px', color: '#525252', zIndex: 30 }}>
+          © 2026 Turquoise Sunrise LLC
+        </p>
       </div>
     </div>
-    <p style={{ position: 'fixed', bottom: '12px', left: 0, right: 0, textAlign: 'center', fontSize: '11px', color: '#525252', zIndex: 9998 }}>
-      © 2026 Turquoise Sunrise LLC
-    </p>
     </>
   );
 }

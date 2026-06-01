@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Info } from 'lucide-react';
+import { Info, Menu } from 'lucide-react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { Button } from './ui/button';
 
@@ -12,6 +12,10 @@ interface SessionLobbyProps {
   onJoin: (username: string, code: string) => Promise<void>;
   onFaq: () => void;
   onPrivacyPolicy: () => void;
+  onTermsOfService: () => void;
+  onAccount: () => void;
+  onShowLogin: (mode: 'signin' | 'signup') => void;
+  onSaveName?: (name: string) => void;
 }
 
 const GREEN = '#17BB34';
@@ -39,11 +43,16 @@ function titleCase(val: string): string {
     .join(' ');
 }
 
-export function SessionLobby({ user: _user, defaultUsername, onSolo, onMultiplayerCreate, onJoin, onFaq, onPrivacyPolicy }: SessionLobbyProps) {
+export function SessionLobby({ user, defaultUsername, onSolo, onMultiplayerCreate, onJoin, onFaq, onPrivacyPolicy, onTermsOfService, onAccount, onShowLogin, onSaveName }: SessionLobbyProps) {
   const [username, setUsername] = useState(defaultUsername ?? '');
+  const [nameConfirmed, setNameConfirmed] = useState(() => !!(defaultUsername && defaultUsername.trim().length >= 2));
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    if (defaultUsername && !username) setUsername(defaultUsername);
+    if (defaultUsername && defaultUsername.trim().length >= 2) {
+      if (!username) setUsername(defaultUsername);
+      setNameConfirmed(true);
+    }
   }, [defaultUsername]);
   const [showUsernameError, setShowUsernameError] = useState(false);
   const [infoPopup, setInfoPopup] = useState<'solo' | 'multiplayer' | 'join' | null>(null);
@@ -95,6 +104,19 @@ export function SessionLobby({ user: _user, defaultUsername, onSolo, onMultiplay
 
   return (
     <div className="min-h-screen flex flex-col items-center p-4">
+
+      {/* Hamburger button */}
+      <div className="w-full flex justify-start mb-2">
+        <button
+          type="button"
+          onClick={() => setMenuOpen(true)}
+          className="text-neutral-400 hover:text-green-500 transition-colors p-1"
+          aria-label="Open menu"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+      </div>
+
       <div className="flex-1 flex flex-col items-center justify-center w-full">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
@@ -109,29 +131,61 @@ export function SessionLobby({ user: _user, defaultUsername, onSolo, onMultiplay
 
           {/* Username */}
           <div className="w-full mb-3">
-            <label className="text-neutral-400 uppercase tracking-wider mb-1 block text-center" style={{ fontSize: '14px' }}>
-              Your Username
-            </label>
-            <div className="flex items-center gap-2">
-              <div className="w-9 shrink-0" />
-              <input
-                ref={inputRef}
-                type="text"
-                value={username}
-                onChange={(e) => handleUsernameChange(e.target.value)}
-                placeholder="e.g. Jordan"
-                maxLength={18}
-                className="flex-1 bg-zinc-800 border-2 border-zinc-600 rounded px-4 py-2 text-lg text-neutral-200 text-center outline-none transition-colors"
-                onFocus={e => (e.target.style.borderColor = GREEN)}
-                onBlur={e => (e.target.style.borderColor = username.trim().length >= 2 ? GREEN : '')}
-              />
-              <div className="w-9 shrink-0" />
-            </div>
-            {showUsernameError && (
-              <p className="text-red-400 text-center mt-1" style={{ fontSize: '14px' }}>Please enter a username to continue</p>
-            )}
-            {!showUsernameError && username.length > 0 && username.trim().length < 2 && (
-              <p className="text-red-400 text-xs text-center mt-1">Minimum 2 characters</p>
+            {!user.is_anonymous && nameConfirmed ? (
+              <p className="text-center text-neutral-200" style={{ fontSize: '18px' }}>
+                Welcome, <span style={{ color: GREEN, fontWeight: 600 }}>{username}</span>!
+              </p>
+            ) : (
+              <>
+                <label className="text-neutral-400 uppercase tracking-wider mb-1 block text-center" style={{ fontSize: '14px' }}>
+                  Your Username
+                </label>
+                <div className="flex items-center gap-2">
+                  <div className="w-9 shrink-0" />
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={username}
+                    onChange={(e) => handleUsernameChange(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && isUsernameValid && !user.is_anonymous) { setNameConfirmed(true); onSaveName?.(username.trim()); } }}
+                    placeholder="e.g. Jordan"
+                    maxLength={18}
+                    className="flex-1 bg-zinc-800 border-2 border-zinc-600 rounded px-4 py-2 text-lg text-neutral-200 text-center outline-none transition-colors"
+                    onFocus={e => (e.target.style.borderColor = GREEN)}
+                    onBlur={e => (e.target.style.borderColor = username.trim().length >= 2 ? GREEN : '')}
+                  />
+                  <div className="w-9 shrink-0" />
+                </div>
+                {showUsernameError && (
+                  <p className="text-red-400 text-center mt-1" style={{ fontSize: '14px' }}>Please enter a username to continue</p>
+                )}
+                {!showUsernameError && username.length > 0 && username.trim().length < 2 && (
+                  <p className="text-red-400 text-xs text-center mt-1">Minimum 2 characters</p>
+                )}
+                {!user.is_anonymous && isUsernameValid && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className="w-9 shrink-0" />
+                    <Button
+                      onClick={() => { setNameConfirmed(true); onSaveName?.(username.trim()); }}
+                      className="flex-1 h-10 text-zinc-900"
+                      style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})` }}
+                    >
+                      Save
+                    </Button>
+                    <div className="w-9 shrink-0" />
+                  </div>
+                )}
+                {user.is_anonymous && (
+                  <div className="text-center mt-3 flex flex-col gap-1">
+                    <button type="button" onClick={() => onShowLogin('signin')} className="text-neutral-400 hover:text-green-500 transition-colors" style={{ fontSize: '13px' }}>
+                      Returning player? Sign in
+                    </button>
+                    <button type="button" onClick={() => onShowLogin('signup')} className="text-neutral-400 hover:text-green-500 transition-colors" style={{ fontSize: '13px' }}>
+                      Create an account
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
@@ -254,34 +308,72 @@ export function SessionLobby({ user: _user, defaultUsername, onSolo, onMultiplay
         </motion.div>
       </div>
 
-      {/* Footer links */}
-      <div className="flex flex-col items-center gap-3 pb-8">
-        <button
-          type="button"
-          onClick={onFaq}
-          className="text-neutral-400 hover:text-neutral-300 tracking-wider transition-colors"
-          style={{ fontSize: '14px', fontWeight: 'normal' }}
-        >
-          FAQs
-        </button>
-        <a
-          href="https://github.com/turquoise-mermaid/Sports-Bingo/issues/new"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-neutral-400 hover:text-neutral-300 uppercase tracking-wider transition-colors"
-          style={{ fontSize: '14px' }}
-        >
-          Submit an Issue
-        </a>
-        <button
-          type="button"
-          onClick={onPrivacyPolicy}
-          className="text-neutral-400 hover:text-neutral-300 tracking-wider transition-colors"
-          style={{ fontSize: '14px', fontWeight: 'normal' }}
-        >
-          Privacy Policy
-        </button>
-      </div>
+      {/* Menu bottom sheet */}
+      <AnimatePresence>
+        {menuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setMenuOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            />
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'tween', duration: 0.22, ease: 'easeOut' }}
+              className="bg-zinc-800"
+              style={{ position: 'fixed', top: 0, bottom: 0, left: 0, width: '260px', zIndex: 50, borderRight: `4px solid ${GREEN}`, borderTopRightRadius: '0.5rem', borderBottomRightRadius: '0.5rem' }}
+            >
+              <div className="p-6 flex flex-col gap-1 h-full">
+                {!user.is_anonymous && (
+                  <button
+                    type="button"
+                    onClick={() => { setMenuOpen(false); onAccount(); }}
+                    className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700"
+                    style={{ fontSize: '15px' }}
+                  >
+                    My Account
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { setMenuOpen(false); onFaq(); }}
+                  className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700"
+                  style={{ fontSize: '15px' }}
+                >
+                  FAQs
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setMenuOpen(false); onPrivacyPolicy(); }}
+                  className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700"
+                  style={{ fontSize: '15px' }}
+                >
+                  Privacy Policy
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setMenuOpen(false); onTermsOfService(); }}
+                  className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700"
+                  style={{ fontSize: '15px' }}
+                >
+                  Terms of Service
+                </button>
+                <a
+                  href="https://github.com/turquoise-mermaid/Sports-Bingo/issues/new"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-neutral-200 hover:text-green-500 transition-colors py-3"
+                  style={{ fontSize: '15px' }}
+                >
+                  Submit an Issue
+                </a>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Info bottom sheet */}
       <AnimatePresence>

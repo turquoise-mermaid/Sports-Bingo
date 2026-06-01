@@ -2,7 +2,7 @@
 
 ## logins
 - check that oauth works for other people
-- fix / check that the fanaticbingo.com site is the thing that shows up when someone uses google signin, not supabase string
+- fix / check that the fanaticbingo.com site is the thing that shows up when someone uses google signin, not supabase string--> need supabase pro- $25/ month
 - check that code works for user signin
 
 ## terms
@@ -11,10 +11,12 @@
 - begin groups
 - review definitions
 
-
 ## boards
 - add double click feature for mark/ unmark square
 - refresh for multiplayer?
+- menu available on boards- have a dot dot dot in upper corner somewhere
 
 ## payments
+- need to connecct stripe
+- 
 

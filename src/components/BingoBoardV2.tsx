@@ -119,6 +119,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, onBackToSports, onG
   const [boardReady, setBoardReady] = useState(false);
   const [expandedSquare, setExpandedSquare] = useState<number | null>(null);
   const [hasBingo, setHasBingo] = useState(false);
+  const [doubleClickEnabled] = useState(() => localStorage.getItem('fanatic_dbl_click') === 'true');
 
   // Solo win message
   const [showBingoMessage, setShowBingoMessage] = useState(false);
@@ -132,6 +133,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, onBackToSports, onG
 
   // UI state
   const [showBackInfo, setShowBackInfo] = useState(false);
+  const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const warned30Ref = useRef(false);
@@ -391,6 +393,19 @@ export function BingoBoardV2({ sport, sessionInfo, username, onBackToSports, onG
         )}
       </AnimatePresence>
 
+      {/* Restart confirmation */}
+      <AnimatePresence>
+        {showRestartConfirm && (
+          <WinOrExpirePopup
+            title="Start a New Board?"
+            message="This will shuffle your board and clear your progress."
+            onYes={() => { handleRestart(); setShowRestartConfirm(false); }}
+            onNo={() => setShowRestartConfirm(false)}
+            borderColor="border-zinc-600"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Solo bingo banner */}
       <AnimatePresence>
         {showBingoMessage && (
@@ -426,7 +441,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, onBackToSports, onG
         onGameEnd={onGameEnd}
         onShowBackInfo={() => setShowBackInfo(true)}
         onShare={handleShare}
-        onRestart={handleRestart}
+        onRestart={() => setShowRestartConfirm(true)}
       />
 
       {/* Grid + leaderboard */}
@@ -444,6 +459,11 @@ export function BingoBoardV2({ sport, sessionInfo, username, onBackToSports, onG
               isMarked={markedSquares.has(index)}
               isFreeSpace={index === 12}
               onClick={() => { if (index !== 12) setExpandedSquare(index); }}
+              onDoubleClick={doubleClickEnabled && index !== 12 ? () => {
+                if (markedSquares.has(index)) handleConfirmUnmark(index);
+                else handleConfirmMark(index);
+                setExpandedSquare(index);
+              } : undefined}
             />
           ))}
         </motion.div>
@@ -467,6 +487,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, onBackToSports, onG
       <BBExpandedSquareSheet
         item={expandedItem}
         isMarked={expandedSquare !== null && markedSquares.has(expandedSquare)}
+        doubleClickMode={doubleClickEnabled}
         onClose={() => setExpandedSquare(null)}
         onMark={() => expandedSquare !== null && handleConfirmMark(expandedSquare)}
         onUnmark={() => expandedSquare !== null && handleConfirmUnmark(expandedSquare)}
