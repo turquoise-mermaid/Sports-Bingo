@@ -122,7 +122,6 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, onBa
   const [boardReady, setBoardReady] = useState(false);
   const [expandedSquare, setExpandedSquare] = useState<number | null>(null);
   const [hasBingo, setHasBingo] = useState(false);
-  const [doubleClickEnabled] = useState(() => localStorage.getItem('fanatic_dbl_click') === 'true');
 
   // Solo win message
   const [showBingoMessage, setShowBingoMessage] = useState(false);
@@ -476,10 +475,10 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, onBa
               isFreeSpace={index === 12}
               onClick={() => {
                 if (index === 12) return;
-                if (doubleClickEnabled && !markedSquares.has(index)) handleConfirmMark(index);
+                if (!markedSquares.has(index)) handleConfirmMark(index);
                 setExpandedSquare(index);
               }}
-              onDoubleClick={doubleClickEnabled && index !== 12 ? () => {
+              onDoubleClick={index !== 12 ? () => {
                 if (markedSquares.has(index)) handleConfirmUnmark(index);
                 setExpandedSquare(index);
               } : undefined}
@@ -505,11 +504,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, onBa
 
       <BBExpandedSquareSheet
         item={expandedItem}
-        isMarked={expandedSquare !== null && markedSquares.has(expandedSquare)}
-        doubleClickMode={doubleClickEnabled}
         onClose={() => setExpandedSquare(null)}
-        onMark={() => expandedSquare !== null && handleConfirmMark(expandedSquare)}
-        onUnmark={() => expandedSquare !== null && handleConfirmUnmark(expandedSquare)}
       />
     </div>
   );

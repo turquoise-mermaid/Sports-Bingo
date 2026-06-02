@@ -1,9 +1,8 @@
-import { useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from './ui/button';
 
-const DBL_CLICK_KEY = 'fanatic_dbl_click';
+// const DBL_CLICK_KEY = 'fanatic_dbl_click';
 
 interface AccountPageProps {
   displayName: string;
@@ -30,13 +29,8 @@ const ROLE_DESCRIPTIONS: Record<string, string> = {
 export function AccountPage({ displayName, email, role, onBack, onSignOut }: AccountPageProps) {
   const roleLabel = ROLE_LABELS[role] ?? 'Free';
   const roleDescription = ROLE_DESCRIPTIONS[role] ?? ROLE_DESCRIPTIONS.free;
-  const [doubleClick, setDoubleClick] = useState(() => localStorage.getItem(DBL_CLICK_KEY) === 'true');
-
-  const toggleDoubleClick = () => {
-    const next = !doubleClick;
-    setDoubleClick(next);
-    localStorage.setItem(DBL_CLICK_KEY, String(next));
-  };
+  // const [doubleClick, setDoubleClick] = useState(() => localStorage.getItem(DBL_CLICK_KEY) === 'true');
+  // const toggleDoubleClick = () => { const next = !doubleClick; setDoubleClick(next); localStorage.setItem(DBL_CLICK_KEY, String(next)); };
 
   return (
     <div className="min-h-screen flex flex-col p-4">
@@ -82,8 +76,8 @@ export function AccountPage({ displayName, email, role, onBack, onSignOut }: Acc
               <p className="text-neutral-400 leading-relaxed" style={{ fontSize: '13px' }}>{roleDescription}</p>
             </div>
 
-            {/* Preferences */}
-            <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
+            {/* Preferences — re-enable when premium features launch (double-tap toggle + future prefs) */}
+            {/* <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
               <p className="text-neutral-500 uppercase tracking-wider mb-3" style={{ fontSize: '11px' }}>Preferences</p>
               <div className="flex items-center justify-between">
                 <div>
@@ -108,7 +102,7 @@ export function AccountPage({ displayName, email, role, onBack, onSignOut }: Acc
                   }} />
                 </button>
               </div>
-            </div>
+            </div> */}
 
             {/* Purchase history placeholder */}
             <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
