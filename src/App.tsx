@@ -159,9 +159,10 @@ export default function App() {
     reconnect();
   }, [user, loading]);
 
-  const persistDisplayName = (name: string) => {
+  const persistDisplayName = async (name: string) => {
     if (!user || user.is_anonymous) return;
-    supabase.from('profiles').update({ display_name: name }).eq('id', user.id);
+    const { error } = await supabase.from('profiles').update({ display_name: name }).eq('id', user.id);
+    if (error) console.error('[persistDisplayName]', error);
   };
 
   // --- Session Lobby ---
