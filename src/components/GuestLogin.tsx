@@ -15,12 +15,14 @@ interface GuestLoginProps {
 }
 
 export function GuestLogin({ user, defaultJoinCode, defaultUsername, onBack, onJoined }: GuestLoginProps) {
+  const isGuest = user.is_anonymous;
+  const [displayName, setDisplayName] = useState(defaultUsername ?? '');
   const [joinCode, setJoinCode] = useState(defaultJoinCode ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const playerName = defaultUsername ?? '';
-  const isValid = joinCode.trim().length === 6;
+  const playerName = isGuest ? displayName.trim() : (defaultUsername ?? '');
+  const isValid = joinCode.trim().length === 6 && playerName.length >= 2;
 
   const handleContinue = async () => {
     const code = joinCode.trim().toUpperCase();
@@ -67,12 +69,33 @@ export function GuestLogin({ user, defaultJoinCode, defaultUsername, onBack, onJ
           <h1 className="text-green-500 uppercase tracking-widest text-3xl font-bold mb-3">
             Join Game
           </h1>
-          <p className="text-neutral-400 text-sm">
-            Playing as <span className="text-neutral-200">{playerName}</span>
-          </p>
+          {!isGuest && (
+            <p className="text-neutral-400 text-sm">
+              Playing as <span className="text-neutral-200">{defaultUsername}</span>
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-5">
+
+          {isGuest && (
+            <div className="w-full">
+              <label className="text-neutral-400 uppercase tracking-wider mb-1 block text-center" style={{ fontSize: '14px' }}>
+                Your Name
+              </label>
+              <input
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value.slice(0, 18))}
+                placeholder="e.g. Jordan"
+                maxLength={18}
+                className="w-full bg-zinc-800 border-2 border-zinc-600 focus:border-green-500 rounded px-4 py-2 text-lg text-neutral-200 text-center outline-none transition-colors"
+              />
+              {displayName.length > 0 && displayName.trim().length < 2 && (
+                <p className="text-red-400 text-xs text-center mt-1">Minimum 2 characters</p>
+              )}
+            </div>
+          )}
 
           <div className="w-full">
             <label className="text-neutral-400 uppercase tracking-wider mb-1 block text-center" style={{ fontSize: '14px' }}>
