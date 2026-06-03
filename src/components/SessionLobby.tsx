@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Info, Menu } from 'lucide-react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
@@ -6,16 +6,15 @@ import { Button } from './ui/button';
 
 interface SessionLobbyProps {
   user: SupabaseUser;
-  defaultUsername?: string;
-  onSolo: (username: string) => void;
-  onMultiplayerCreate: (username: string) => void;
-  onJoin: (username: string, code: string) => Promise<void>;
+  username: string;
+  onSolo: () => void;
+  onMultiplayerCreate: () => void;
+  onJoin: (code: string) => Promise<void>;
   onFaq: () => void;
   onPrivacyPolicy: () => void;
   onTermsOfService: () => void;
   onAccount: () => void;
   onShowLogin: (mode: 'signin' | 'signup') => void;
-  onSaveName?: (name: string) => void;
 }
 
 const GREEN = '#17BB34';
@@ -36,58 +35,21 @@ const INFO = {
   },
 };
 
-function titleCase(val: string): string {
-  return val
-    .split(' ')
-    .map(word => word ? word[0].toUpperCase() + word.slice(1).toLowerCase() : '')
-    .join(' ');
-}
-
-export function SessionLobby({ user, defaultUsername, onSolo, onMultiplayerCreate, onJoin, onFaq, onPrivacyPolicy, onTermsOfService, onAccount, onShowLogin, onSaveName }: SessionLobbyProps) {
-  const [username, setUsername] = useState(defaultUsername ?? '');
-  const [nameConfirmed, setNameConfirmed] = useState(() => !!(defaultUsername && defaultUsername.trim().length >= 2));
+export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJoin, onFaq, onPrivacyPolicy, onTermsOfService, onAccount, onShowLogin }: SessionLobbyProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    if (defaultUsername && defaultUsername.trim().length >= 2) {
-      if (!username) setUsername(defaultUsername);
-      setNameConfirmed(true);
-    }
-  }, [defaultUsername]);
-  const [showUsernameError, setShowUsernameError] = useState(false);
   const [infoPopup, setInfoPopup] = useState<'solo' | 'multiplayer' | 'join' | null>(null);
   const [joinExpanded, setJoinExpanded] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [joinLoading, setJoinLoading] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const codeRef = useRef<HTMLInputElement>(null);
 
-  const handleUsernameChange = (val: string) => {
-    const trimmed = val.slice(0, 18);
-    setUsername(titleCase(trimmed));
-    if (showUsernameError) setShowUsernameError(false);
-  };
-
-  const isUsernameValid = username.trim().length >= 2;
-
-  const guardedAction = (action: () => void) => {
-    if (!isUsernameValid) {
-      setShowUsernameError(true);
-      inputRef.current?.focus();
-      return;
-    }
-    action();
-  };
-
   const handleToggleJoin = () => {
-    guardedAction(() => {
-      const next = !joinExpanded;
-      setJoinExpanded(next);
-      setJoinCode('');
-      setJoinError(null);
-      if (next) setTimeout(() => codeRef.current?.focus(), 50);
-    });
+    const next = !joinExpanded;
+    setJoinExpanded(next);
+    setJoinCode('');
+    setJoinError(null);
+    if (next) setTimeout(() => codeRef.current?.focus(), 50);
   };
 
   const handleJoinSubmit = async () => {
@@ -95,7 +57,7 @@ export function SessionLobby({ user, defaultUsername, onSolo, onMultiplayerCreat
     setJoinLoading(true);
     setJoinError(null);
     try {
-      await onJoin(username.trim(), joinCode);
+      await onJoin(joinCode);
     } catch (err) {
       setJoinError(err instanceof Error ? err.message : 'Could not join session.');
       setJoinLoading(false);
@@ -105,7 +67,6 @@ export function SessionLobby({ user, defaultUsername, onSolo, onMultiplayerCreat
   return (
     <div className="min-h-screen flex flex-col items-center p-4">
 
-      {/* Hamburger button */}
       <div className="w-full flex justify-start mb-2">
         <button
           type="button"
@@ -129,62 +90,25 @@ export function SessionLobby({ user, defaultUsername, onSolo, onMultiplayerCreat
             <div className="h-1 w-20 mx-auto" style={{ backgroundColor: GREEN }} />
           </div>
 
-          {/* Username */}
-          <div className="w-full mb-3">
-            {!user.is_anonymous && nameConfirmed ? (
-              <p className="text-center text-neutral-200" style={{ fontSize: '18px' }}>
+          {/* Username display */}
+          <div className="w-full mb-3 text-center" style={{ minHeight: '52px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            {!user.is_anonymous ? (
+              <p className="text-neutral-200" style={{ fontSize: '18px' }}>
                 Welcome, <span style={{ color: GREEN, fontWeight: 600 }}>{username}</span>!
               </p>
             ) : (
               <>
-                <label className="text-neutral-400 uppercase tracking-wider mb-1 block text-center" style={{ fontSize: '14px' }}>
-                  Your Username
-                </label>
-                <div className="flex items-center gap-2">
-                  <div className="w-9 shrink-0" />
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={username}
-                    onChange={(e) => handleUsernameChange(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' && isUsernameValid && !user.is_anonymous) { setNameConfirmed(true); onSaveName?.(username.trim()); } }}
-                    placeholder="e.g. Jordan"
-                    maxLength={18}
-                    className="flex-1 bg-zinc-800 border-2 border-zinc-600 rounded px-4 py-2 text-lg text-neutral-200 text-center outline-none transition-colors"
-                    onFocus={e => (e.target.style.borderColor = GREEN)}
-                    onBlur={e => (e.target.style.borderColor = username.trim().length >= 2 ? GREEN : '')}
-                  />
-                  <div className="w-9 shrink-0" />
+                <p className="text-neutral-400 mb-2" style={{ fontSize: '14px' }}>
+                  Playing as <span className="text-neutral-300">{username}</span> (Guest)
+                </p>
+                <div className="flex gap-4">
+                  <button type="button" onClick={() => onShowLogin('signin')} className="text-neutral-500 hover:text-green-500 transition-colors" style={{ fontSize: '13px' }}>
+                    Sign in
+                  </button>
+                  <button type="button" onClick={() => onShowLogin('signup')} className="text-neutral-500 hover:text-green-500 transition-colors" style={{ fontSize: '13px' }}>
+                    Create account
+                  </button>
                 </div>
-                {showUsernameError && (
-                  <p className="text-red-400 text-center mt-1" style={{ fontSize: '14px' }}>Please enter a username to continue</p>
-                )}
-                {!showUsernameError && username.length > 0 && username.trim().length < 2 && (
-                  <p className="text-red-400 text-xs text-center mt-1">Minimum 2 characters</p>
-                )}
-                {!user.is_anonymous && isUsernameValid && (
-                  <div className="flex items-center gap-2 mt-2">
-                    <div className="w-9 shrink-0" />
-                    <Button
-                      onClick={() => { setNameConfirmed(true); onSaveName?.(username.trim()); }}
-                      className="flex-1 h-10 text-zinc-900"
-                      style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})` }}
-                    >
-                      Save
-                    </Button>
-                    <div className="w-9 shrink-0" />
-                  </div>
-                )}
-                {user.is_anonymous && (
-                  <div className="text-center mt-3 flex flex-col gap-1">
-                    <button type="button" onClick={() => onShowLogin('signin')} className="text-neutral-400 hover:text-green-500 transition-colors" style={{ fontSize: '13px' }}>
-                      Returning player? Sign in
-                    </button>
-                    <button type="button" onClick={() => onShowLogin('signup')} className="text-neutral-400 hover:text-green-500 transition-colors" style={{ fontSize: '13px' }}>
-                      Create an account
-                    </button>
-                  </div>
-                )}
               </>
             )}
           </div>
@@ -192,17 +116,18 @@ export function SessionLobby({ user, defaultUsername, onSolo, onMultiplayerCreat
           <p className="text-neutral-400 text-center mb-3">How do you want to play?</p>
 
           <div className="flex flex-col gap-3">
-            {/* Solo */}
+
             <div className="flex items-center gap-2">
               <div className="w-9 shrink-0" />
               <div className="flex-1 flex rounded overflow-hidden" style={{ border: `2px solid ${GREEN}` }}>
                 <Button
-                  onClick={() => guardedAction(() => onSolo(username.trim()))}
+                  onClick={onSolo}
                   className="flex-1 bg-gradient-to-r from-zinc-700 to-zinc-800 hover:from-zinc-600 hover:to-zinc-700 text-neutral-200 text-lg justify-center rounded-none h-12"
                 >
                   Private Game
                 </Button>
                 <button
+                  type="button"
                   onClick={() => setInfoPopup('solo')}
                   className="flex items-center justify-center px-3 text-neutral-400 hover:text-green-500 hover:bg-zinc-700/50 transition-colors shrink-0"
                   style={{ borderLeft: `2px solid ${GREEN}` }}
@@ -214,17 +139,17 @@ export function SessionLobby({ user, defaultUsername, onSolo, onMultiplayerCreat
               <div className="w-9 shrink-0" />
             </div>
 
-            {/* Multiplayer */}
             <div className="flex items-center gap-2">
               <div className="w-9 shrink-0" />
               <div className="flex-1 flex rounded overflow-hidden" style={{ border: `2px solid ${GREEN}` }}>
                 <Button
-                  onClick={() => guardedAction(() => onMultiplayerCreate(username.trim()))}
+                  onClick={onMultiplayerCreate}
                   className="flex-1 bg-gradient-to-r from-zinc-700 to-zinc-800 hover:from-zinc-600 hover:to-zinc-700 text-neutral-200 text-lg justify-center rounded-none h-12"
                 >
                   Multiplayer Game
                 </Button>
                 <button
+                  type="button"
                   onClick={() => setInfoPopup('multiplayer')}
                   className="flex items-center justify-center px-3 text-neutral-400 hover:text-green-500 hover:bg-zinc-700/50 transition-colors shrink-0"
                   style={{ borderLeft: `2px solid ${GREEN}` }}
@@ -236,7 +161,6 @@ export function SessionLobby({ user, defaultUsername, onSolo, onMultiplayerCreat
               <div className="w-9 shrink-0" />
             </div>
 
-            {/* Join */}
             <div className="flex items-center gap-2">
               <div className="w-9 shrink-0" />
               <div className="flex-1 flex rounded overflow-hidden" style={{ border: `2px solid ${GREEN}` }}>
@@ -247,6 +171,7 @@ export function SessionLobby({ user, defaultUsername, onSolo, onMultiplayerCreat
                   Join Game
                 </Button>
                 <button
+                  type="button"
                   onClick={() => setInfoPopup('join')}
                   className="flex items-center justify-center px-3 text-neutral-400 hover:text-green-500 hover:bg-zinc-700/50 transition-colors shrink-0"
                   style={{ borderLeft: `2px solid ${GREEN}` }}
@@ -258,7 +183,6 @@ export function SessionLobby({ user, defaultUsername, onSolo, onMultiplayerCreat
               <div className="w-9 shrink-0" />
             </div>
 
-            {/* Inline join form */}
             <AnimatePresence>
               {joinExpanded && (
                 <motion.div
@@ -304,6 +228,7 @@ export function SessionLobby({ user, defaultUsername, onSolo, onMultiplayerCreat
                 </motion.div>
               )}
             </AnimatePresence>
+
           </div>
         </motion.div>
       </div>
@@ -336,39 +261,10 @@ export function SessionLobby({ user, defaultUsername, onSolo, onMultiplayerCreat
                     My Account
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={() => { setMenuOpen(false); onFaq(); }}
-                  className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700"
-                  style={{ fontSize: '15px' }}
-                >
-                  FAQs
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setMenuOpen(false); onPrivacyPolicy(); }}
-                  className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700"
-                  style={{ fontSize: '15px' }}
-                >
-                  Privacy Policy
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setMenuOpen(false); onTermsOfService(); }}
-                  className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700"
-                  style={{ fontSize: '15px' }}
-                >
-                  Terms of Service
-                </button>
-                <a
-                  href="https://github.com/turquoise-mermaid/Sports-Bingo/issues/new"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-neutral-200 hover:text-green-500 transition-colors py-3"
-                  style={{ fontSize: '15px' }}
-                >
-                  Submit an Issue
-                </a>
+                <button type="button" onClick={() => { setMenuOpen(false); onFaq(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700" style={{ fontSize: '15px' }}>FAQs</button>
+                <button type="button" onClick={() => { setMenuOpen(false); onPrivacyPolicy(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700" style={{ fontSize: '15px' }}>Privacy Policy</button>
+                <button type="button" onClick={() => { setMenuOpen(false); onTermsOfService(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700" style={{ fontSize: '15px' }}>Terms of Service</button>
+                <a href="https://github.com/turquoise-mermaid/Sports-Bingo/issues/new" target="_blank" rel="noopener noreferrer" className="text-neutral-200 hover:text-green-500 transition-colors py-3" style={{ fontSize: '15px' }}>Submit an Issue</a>
               </div>
             </motion.div>
           </>
@@ -393,24 +289,15 @@ export function SessionLobby({ user, defaultUsername, onSolo, onMultiplayerCreat
               style={{ borderTop: `4px solid ${GREEN}` }}
             >
               <div className="max-w-md mx-auto text-center">
-                <h3 className="text-neutral-200 uppercase tracking-wide mb-3">
-                  {INFO[infoPopup].title}
-                </h3>
-                <p className="text-neutral-400 mb-6">
-                  {INFO[infoPopup].description}
-                </p>
-                <Button
-                  onClick={() => setInfoPopup(null)}
-                  className="w-full text-zinc-900 h-10"
-                  style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})` }}
-                >
-                  Ok
-                </Button>
+                <h3 className="text-neutral-200 uppercase tracking-wide mb-3">{INFO[infoPopup].title}</h3>
+                <p className="text-neutral-400 mb-6">{INFO[infoPopup].description}</p>
+                <Button onClick={() => setInfoPopup(null)} className="w-full text-zinc-900 h-10" style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})` }}>Ok</Button>
               </div>
             </motion.div>
           </>
         )}
       </AnimatePresence>
+
     </div>
   );
 }

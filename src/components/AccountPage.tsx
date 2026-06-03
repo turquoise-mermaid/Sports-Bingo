@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 // const DBL_CLICK_KEY = 'fanatic_dbl_click';
 
 interface AccountPageProps {
-  displayName: string;
+  username: string;
   email: string;
   role: string;
   onBack: () => void;
@@ -20,17 +20,15 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const ROLE_DESCRIPTIONS: Record<string, string> = {
-  free: 'Unlimited games at the standard feature set.', // Premium features are visible but locked.
+  free: 'Unlimited games at the standard feature set.',
   pass: 'Temporary premium access including Create Your Own board, league filters, and Blackout Bingo. Access lasts for the duration of the pass.',
   premium: 'Full access to all features including custom term submission for the Fanatic Bingo term library and all future premium content.',
   dev: 'Internal testing account with full premium access.',
 };
 
-export function AccountPage({ displayName, email, role, onBack, onSignOut }: AccountPageProps) {
+export function AccountPage({ username, email, role, onBack, onSignOut }: AccountPageProps) {
   const roleLabel = ROLE_LABELS[role] ?? 'Free';
   const roleDescription = ROLE_DESCRIPTIONS[role] ?? ROLE_DESCRIPTIONS.free;
-  // const [doubleClick, setDoubleClick] = useState(() => localStorage.getItem(DBL_CLICK_KEY) === 'true');
-  // const toggleDoubleClick = () => { const next = !doubleClick; setDoubleClick(next); localStorage.setItem(DBL_CLICK_KEY, String(next)); };
 
   return (
     <div className="min-h-screen flex flex-col p-4">
@@ -57,10 +55,11 @@ export function AccountPage({ displayName, email, role, onBack, onSignOut }: Acc
 
           <div className="flex flex-col gap-4">
 
-            {/* Display name */}
+            {/* Username */}
             <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
-              <p className="text-neutral-500 uppercase tracking-wider mb-1" style={{ fontSize: '11px' }}>Display Name</p>
-              <p className="text-neutral-200" style={{ fontSize: '15px' }}>{displayName || '—'}</p>
+              <p className="text-neutral-500 uppercase tracking-wider mb-1" style={{ fontSize: '11px' }}>Username</p>
+              <p className="text-neutral-200" style={{ fontSize: '15px' }}>{username || '—'}</p>
+              <p className="text-neutral-600 mt-1" style={{ fontSize: '11px' }}>Usernames cannot be changed.</p>
             </div>
 
             {/* Email */}
@@ -76,32 +75,9 @@ export function AccountPage({ displayName, email, role, onBack, onSignOut }: Acc
               <p className="text-neutral-400 leading-relaxed" style={{ fontSize: '13px' }}>{roleDescription}</p>
             </div>
 
-            {/* Preferences — re-enable when premium features launch (double-tap toggle + future prefs) */}
+            {/* Preferences — re-enable when premium features launch */}
             {/* <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
-              <p className="text-neutral-500 uppercase tracking-wider mb-3" style={{ fontSize: '11px' }}>Preferences</p>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-neutral-200" style={{ fontSize: '14px' }}>Double-tap to mark</p>
-                  <p className="text-neutral-500 mt-0.5" style={{ fontSize: '12px' }}>Mark squares instantly without confirmation</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={toggleDoubleClick}
-                  style={{
-                    width: '44px', height: '24px', borderRadius: '12px', flexShrink: 0,
-                    backgroundColor: doubleClick ? '#17BB34' : '#3f3f46',
-                    position: 'relative', transition: 'background-color 0.2s', border: 'none', cursor: 'pointer'
-                  }}
-                  aria-label="Toggle double-tap to mark"
-                >
-                  <span style={{
-                    position: 'absolute', top: '2px',
-                    left: doubleClick ? '22px' : '2px',
-                    width: '20px', height: '20px', borderRadius: '50%',
-                    backgroundColor: 'white', transition: 'left 0.2s'
-                  }} />
-                </button>
-              </div>
+              ...
             </div> */}
 
             {/* Purchase history placeholder */}

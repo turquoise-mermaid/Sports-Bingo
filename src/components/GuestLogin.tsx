@@ -15,30 +15,25 @@ interface GuestLoginProps {
 }
 
 export function GuestLogin({ user, defaultJoinCode, defaultUsername, onBack, onJoined }: GuestLoginProps) {
-  const [username, setUsername] = useState(defaultUsername ?? '');
   const [joinCode, setJoinCode] = useState(defaultJoinCode ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isValid = username.trim().length >= 2 && joinCode.trim().length === 6;
-
-  const handleUsernameChange = (val: string) => {
-    const trimmed = val.slice(0, 18);
-    setUsername(trimmed.split(' ').map(w => w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : '').join(' '));
-  };
+  const playerName = defaultUsername ?? '';
+  const isValid = joinCode.trim().length === 6;
 
   const handleContinue = async () => {
     const code = joinCode.trim().toUpperCase();
     setLoading(true);
     setError(null);
     try {
-      const { session, player } = await joinSessionByCode(code, user.id, username.trim());
+      const { session, player } = await joinSessionByCode(code, user.id, playerName);
       onJoined(
         {
           sessionId: session.id,
           playerId: player.id,
           groupName: session.group_name,
-          initials: username.trim(),
+          initials: playerName,
           isHost: false,
           joinCode: code,
         },
@@ -70,34 +65,15 @@ export function GuestLogin({ user, defaultJoinCode, defaultUsername, onBack, onJ
         </div>
         <div className="text-center mb-8">
           <h1 className="text-green-500 uppercase tracking-widest text-3xl font-bold mb-3">
-            Welcome!
+            Join Game
           </h1>
-          <p className="text-neutral-200 text-sm leading-relaxed">
-            Please enter your username as you'd like to see it appear in the game. Then enter your code and click Continue to start your game.
+          <p className="text-neutral-400 text-sm">
+            Playing as <span className="text-neutral-200">{playerName}</span>
           </p>
         </div>
 
         <div className="flex flex-col gap-5">
 
-          {/* Username */}
-          <div className="w-full">
-            <label className="text-neutral-400 uppercase tracking-wider mb-1 block text-center" style={{ fontSize: '14px' }}>
-              Username
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => handleUsernameChange(e.target.value)}
-              placeholder="e.g. Jordan"
-              maxLength={18}
-              className="w-full bg-zinc-800 border-2 border-zinc-600 focus:border-green-500 rounded px-4 py-2 text-lg text-neutral-200 text-center outline-none transition-colors"
-            />
-            {username.length > 0 && username.length < 2 && (
-              <p className="text-red-400 text-xs text-center mt-1">Minimum 2 characters</p>
-            )}
-          </div>
-
-          {/* Join Code */}
           <div className="w-full">
             <label className="text-neutral-400 uppercase tracking-wider mb-1 block text-center" style={{ fontSize: '14px' }}>
               Game Code
@@ -110,7 +86,7 @@ export function GuestLogin({ user, defaultJoinCode, defaultUsername, onBack, onJ
                 e.target.value.toUpperCase().replace(/[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]/g, '').slice(0, 6)
               )}
               onKeyDown={(e) => e.key === 'Enter' && isValid && handleContinue()}
-              placeholder=""
+              placeholder="XXXXXX"
               maxLength={6}
               className="w-full bg-zinc-800 border-2 border-zinc-600 focus:border-green-500 rounded px-4 py-2 text-lg text-neutral-200 text-center font-mono tracking-widest outline-none transition-colors"
             />

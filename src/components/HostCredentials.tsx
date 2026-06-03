@@ -21,21 +21,15 @@ function generateJoinCode(): string {
 
 export function HostCredentials({ onBack, onContinue, defaultUsername }: HostCredentialsProps) {
   const [groupName, setGroupName] = useState('');
-  const [username, setUsername] = useState(defaultUsername ?? '');
   const [joinCode] = useState(generateJoinCode);
   const [copied, setCopied] = useState(false);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
 
-  const isValid = groupName.trim().length > 0 && username.trim().length >= 2;
+  const isValid = groupName.trim().length > 0;
+  const hostName = defaultUsername ?? '';
   const shareLink = `${window.location.origin}?join=${joinCode}`;
-  const shareMessage = `${username.trim() || '...'} has invited you to ${groupName.trim() || '...'} Bingo. Your code is ${joinCode}. Sign in at: ${shareLink}`;
-
-  const handleUsernameChange = (val: string) => {
-    const trimmed = val.slice(0, 18);
-    if (!trimmed) { setUsername(''); return; }
-    setUsername(trimmed[0].toUpperCase() + trimmed.slice(1).toLowerCase());
-  };
+  const shareMessage = `${hostName || '...'} has invited you to ${groupName.trim() || '...'} Bingo. Your code is ${joinCode}. Sign in at: ${shareLink}`;
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -53,7 +47,7 @@ export function HostCredentials({ onBack, onContinue, defaultUsername }: HostCre
     setStarting(true);
     setStartError(null);
     try {
-      await onContinue(groupName.trim(), username.trim(), joinCode);
+      await onContinue(groupName.trim(), hostName, joinCode);
     } catch (err) {
       const msg = (err as any)?.message ?? (err instanceof Error ? err.message : null);
       setStartError(msg || 'Could not start game. Please try again.');
@@ -68,7 +62,6 @@ export function HostCredentials({ onBack, onContinue, defaultUsername }: HostCre
         animate={{ scale: 1, opacity: 1 }}
         className="w-full max-w-md"
       >
-        {/* Back button row */}
         <div className="mb-2">
           <Button
             onClick={onBack}
@@ -80,14 +73,12 @@ export function HostCredentials({ onBack, onContinue, defaultUsername }: HostCre
           </Button>
         </div>
 
-        {/* Centered title */}
         <h2 className="text-green-500 uppercase tracking-wider text-center font-bold mb-6">
           Host Setup
         </h2>
 
         <div className="flex flex-col gap-4 items-center">
 
-          {/* Team Name */}
           <div className="w-full">
             <label className="text-neutral-400 uppercase tracking-wider mb-1 block text-center" style={{ fontSize: '14px' }}>
               Team Name
@@ -103,26 +94,6 @@ export function HostCredentials({ onBack, onContinue, defaultUsername }: HostCre
             />
           </div>
 
-          {/* Username */}
-          <div className="w-full">
-            <label className="text-neutral-400 uppercase tracking-wider mb-1 block text-center" style={{ fontSize: '14px' }}>
-              Username
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => handleUsernameChange(e.target.value)}
-              placeholder="e.g. Jordan"
-              maxLength={18}
-              className="w-full bg-zinc-800 border-2 border-zinc-600 focus:border-green-500 rounded px-4 py-2 text-neutral-200 text-center outline-none transition-colors"
-              style={{ fontSize: '14px' }}
-            />
-            {username.length > 0 && username.length < 2 && (
-              <p className="text-red-400 text-center mt-1" style={{ fontSize: '14px' }}>Minimum 2 characters</p>
-            )}
-          </div>
-
-          {/* Join code + Share — only visible once valid */}
           <AnimatePresence>
             {isValid && (
               <motion.div
@@ -149,7 +120,6 @@ export function HostCredentials({ onBack, onContinue, defaultUsername }: HostCre
             )}
           </AnimatePresence>
 
-          {/* Continue */}
           <AnimatePresence>
             {isValid && (
               <motion.div
