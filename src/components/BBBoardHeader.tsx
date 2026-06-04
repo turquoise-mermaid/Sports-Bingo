@@ -76,7 +76,7 @@ export function BBBoardHeader({
               style={{ fontSize: '14px' }}
             >
               <RotateCcw className="w-3 h-3 mr-1" />
-              Shuffle
+              New Board
             </Button>
           )}
           {hasBingo && isMultiplayer && !showMultiplayerWin && (
@@ -107,7 +107,7 @@ export function BBBoardHeader({
             className="text-neutral-300 hover:bg-zinc-800 hover:text-green-500 h-8 px-3"
           >
             <RotateCcw className="w-4 h-4 mr-1" />
-            Restart
+            New Board
           </Button>
         )}
         {imHost && (
@@ -134,7 +134,7 @@ export function BBBoardHeader({
             className="text-neutral-300 hover:bg-zinc-800 hover:text-green-500 h-8 px-3"
           >
             <RotateCcw className="w-4 h-4 mr-1" />
-            Restart
+            New Board
           </Button>
         )}
       </div>
