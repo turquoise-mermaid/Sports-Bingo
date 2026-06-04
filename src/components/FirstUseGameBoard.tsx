@@ -175,15 +175,7 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
                 index={index}
                 isMarked={markedSquares.has(index)}
                 isFreeSpace={index === 12}
-                onClick={() => {
-                  if (index === 12) return;
-                  if (!markedSquares.has(index)) handleConfirmMark(index);
-                  setExpandedSquare(index);
-                }}
-                onDoubleClick={index !== 12 ? () => {
-                  if (markedSquares.has(index)) handleConfirmUnmark(index);
-                  setExpandedSquare(index);
-                } : undefined}
+                onClick={() => { if (index !== 12) setExpandedSquare(index); }}
               />
             ))}
           </motion.div>
@@ -194,7 +186,10 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
 
       <BBExpandedSquareSheet
         item={expandedSquare !== null ? bingoItems[expandedSquare] : null}
+        isMarked={expandedSquare !== null && markedSquares.has(expandedSquare)}
         onClose={() => setExpandedSquare(null)}
+        onMark={() => expandedSquare !== null && handleConfirmMark(expandedSquare)}
+        onUnmark={() => expandedSquare !== null && handleConfirmUnmark(expandedSquare)}
       />
 
       {/* Centered overlay — BINGO! banner + card stacked */}
