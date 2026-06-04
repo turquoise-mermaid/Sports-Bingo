@@ -1,6 +1,8 @@
 import { motion } from "motion/react";
+import { ArrowLeft } from "lucide-react";
 import { Sport } from "../App";
 import { Icon } from "@iconify/react";
+import { Button } from "./ui/button";
 
 interface SportSelectionProps {
   onSelectSport: (sport: Sport) => void;
@@ -55,14 +57,15 @@ const sports = [
 export function SportSelection({ onSelectSport, onBack }: SportSelectionProps) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md flex items-center mb-6">
-        <button
+      <div className="w-full max-w-md mb-4">
+        <Button
           onClick={onBack}
-          className="text-neutral-400 hover:text-green-500 transition-colors flex items-center gap-1 text-sm"
+          variant="ghost"
+          className="text-neutral-300 hover:bg-zinc-800 hover:text-green-500 h-8 px-3"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+          <ArrowLeft className="w-4 h-4 mr-1" />
           Back
-        </button>
+        </Button>
       </div>
       <motion.div
         initial={{ scale: 0, y: -50 }}
