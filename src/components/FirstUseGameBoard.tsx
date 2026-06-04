@@ -66,6 +66,7 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
   const [bingoItems, setBingoItems] = useState<(BingoItem | null)[]>([]);
   const [markedSquares, setMarkedSquares] = useState<Set<number>>(new Set([12]));
   const [expandedSquare, setExpandedSquare] = useState<number | null>(null);
+  const doubleClickEnabled = true;
   const [hasBingo, setHasBingo] = useState(initialHasBingo ?? false);
   const [showBanner, setShowBanner] = useState(initialHasBingo ?? false);
   const [showSignUpCard, setShowSignUpCard] = useState(initialHasBingo ?? false);
@@ -175,7 +176,15 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
                 index={index}
                 isMarked={markedSquares.has(index)}
                 isFreeSpace={index === 12}
-                onClick={() => { if (index !== 12) setExpandedSquare(index); }}
+                onClick={() => {
+                  if (index === 12) return;
+                  if (doubleClickEnabled && !markedSquares.has(index)) handleConfirmMark(index);
+                  setExpandedSquare(index);
+                }}
+                onDoubleClick={doubleClickEnabled && index !== 12 ? () => {
+                  if (markedSquares.has(index)) handleConfirmUnmark(index);
+                  setExpandedSquare(index);
+                } : undefined}
               />
             ))}
           </motion.div>
@@ -187,6 +196,7 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
       <BBExpandedSquareSheet
         item={expandedSquare !== null ? bingoItems[expandedSquare] : null}
         isMarked={expandedSquare !== null && markedSquares.has(expandedSquare)}
+        doubleClickMode={doubleClickEnabled}
         onClose={() => setExpandedSquare(null)}
         onMark={() => expandedSquare !== null && handleConfirmMark(expandedSquare)}
         onUnmark={() => expandedSquare !== null && handleConfirmUnmark(expandedSquare)}
