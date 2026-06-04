@@ -207,7 +207,7 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
       {/* New Board upsell popup */}
       {showNewBoardUpsell && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)', padding: '1rem' }}>
-          <div className="bg-zinc-800 border-2 border-green-500 rounded-lg p-6 w-full max-w-sm text-center">
+          <div className="bg-zinc-800 border-2 border-green-500 rounded-lg p-6 w-full max-w-xs text-center">
             <h3 className="text-neutral-200 font-bold mb-3 uppercase tracking-wide">Get a New Board</h3>
             <p className="text-neutral-400 mb-6" style={{ fontSize: '14px' }}>
               Create a free account to start a new board with a fresh random selection of terms.
