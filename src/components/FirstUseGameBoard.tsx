@@ -72,6 +72,7 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
   const [showSignUpCard, setShowSignUpCard] = useState(initialHasBingo ?? false);
   const [showThankYou, setShowThankYou] = useState(false);
   const [showCloseMessage, setShowCloseMessage] = useState(false);
+  const [showNewBoardUpsell, setShowNewBoardUpsell] = useState(false);
   const gameStartedLogged = useRef(false);
 
   useEffect(() => {
@@ -154,7 +155,17 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
           >
             {SPORT_NAMES[sport].toUpperCase()} BINGO
           </h2>
-          <div style={{ width: '80px' }} />
+          {!hasBingo ? (
+            <Button
+              onClick={() => setShowNewBoardUpsell(true)}
+              variant="ghost"
+              className="text-zinc-600 hover:bg-zinc-800 hover:text-zinc-500 h-8 px-3"
+            >
+              New Board
+            </Button>
+          ) : (
+            <div style={{ width: '80px' }} />
+          )}
         </div>
         <div className="text-center mb-1" style={{ height: '47px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           {username && (
@@ -192,6 +203,33 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
       </div>
 
       <Confetti trigger={hasBingo && !initialHasBingo} />
+
+      {/* New Board upsell popup */}
+      {showNewBoardUpsell && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)', padding: '1rem' }}>
+          <div className="bg-zinc-800 border-2 border-green-500 rounded-lg p-6 w-full max-w-sm text-center">
+            <h3 className="text-neutral-200 font-bold mb-3 uppercase tracking-wide">Get a New Board</h3>
+            <p className="text-neutral-400 mb-6" style={{ fontSize: '14px' }}>
+              Create a free account to start a new board with a fresh random selection of terms.
+            </p>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setShowNewBoardUpsell(false)}
+                variant="outline"
+                className="flex-1 border-zinc-600 text-neutral-300 hover:bg-zinc-700 h-10"
+              >
+                Maybe Later
+              </Button>
+              <Button
+                onClick={() => { setShowNewBoardUpsell(false); onShowLogin('signup'); }}
+                className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-zinc-900 h-10"
+              >
+                Sign Up
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <BBExpandedSquareSheet
         item={expandedSquare !== null ? bingoItems[expandedSquare] : null}
