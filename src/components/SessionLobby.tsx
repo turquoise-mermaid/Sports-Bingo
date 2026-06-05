@@ -15,6 +15,7 @@ interface SessionLobbyProps {
   onTermsOfService: () => void;
   onAccount: () => void;
   onSupport: () => void;
+  onHowToPlay: () => void;
   onShowLogin: (mode: 'signin' | 'signup') => void;
 }
 
@@ -36,7 +37,7 @@ const INFO = {
   },
 };
 
-export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJoin, onFaq, onPrivacyPolicy, onTermsOfService, onAccount, onSupport, onShowLogin }: SessionLobbyProps) {
+export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJoin, onFaq, onPrivacyPolicy, onTermsOfService, onAccount, onSupport, onHowToPlay, onShowLogin }: SessionLobbyProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [infoPopup, setInfoPopup] = useState<'solo' | 'multiplayer' | 'join' | null>(null);
   const [joinExpanded, setJoinExpanded] = useState(false);
@@ -112,6 +113,17 @@ export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJo
                 </div>
               </>
             )}
+          </div>
+
+          <div className="flex justify-center mb-4">
+            <button
+              type="button"
+              onClick={onHowToPlay}
+              className="text-neutral-500 hover:text-green-500 transition-colors uppercase tracking-wider"
+              style={{ fontSize: '12px' }}
+            >
+              How to Play
+            </button>
           </div>
 
           <p className="text-neutral-400 text-center mb-3">How do you want to play?</p>

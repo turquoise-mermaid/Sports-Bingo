@@ -13,6 +13,7 @@ import { AccountPage } from './components/AccountPage';
 import { LoginPage } from './components/LoginPage';
 import { CompleteProfilePage } from './components/CompleteProfilePage';
 import { SupportPage } from './components/SupportPage';
+import { HowToPlay } from './components/HowToPlay';
 import { DevNav } from './components/DevNav';
 import { useAuth } from './hooks/useAuth';
 import { createMultiplayerSession, loginAsHost, rejoinSession, joinSessionByCode } from './lib/sessions';
@@ -34,6 +35,7 @@ type AppView =
   | 'terms-of-service'
   | 'account'
   | 'support'
+  | 'how-to-play'
   | 'game';
 
 type SessionMode = 'solo' | 'multiplayer-create';
@@ -266,6 +268,7 @@ export default function App() {
               onTermsOfService={() => setView('terms-of-service')}
               onAccount={() => setView('account')}
               onSupport={() => setView('support')}
+              onHowToPlay={() => setView('how-to-play')}
               onShowLogin={(mode) => { setLoginMode(mode); setView('login'); }}
             />
           )}
@@ -273,6 +276,7 @@ export default function App() {
           {view === 'privacy-policy' && <PrivacyPolicy onBack={handleBackToLobby} />}
           {view === 'terms-of-service' && <TermsOfService onBack={handleBackToLobby} />}
           {view === 'support' && <SupportPage onBack={handleBackToLobby} userEmail={user.email ?? ''} />}
+          {view === 'how-to-play' && <HowToPlay onBack={handleBackToLobby} />}
           {view === 'account' && (
             <AccountPage
               username={username}
