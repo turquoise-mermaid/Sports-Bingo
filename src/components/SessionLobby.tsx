@@ -115,17 +115,6 @@ export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJo
             )}
           </div>
 
-          <div className="flex justify-center mb-4">
-            <button
-              type="button"
-              onClick={onHowToPlay}
-              className="text-neutral-500 hover:text-green-500 transition-colors uppercase tracking-wider"
-              style={{ fontSize: '12px' }}
-            >
-              How to Play
-            </button>
-          </div>
-
           <p className="text-neutral-400 text-center mb-3">How do you want to play?</p>
 
           <div className="flex flex-col gap-3">
@@ -243,6 +232,18 @@ export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJo
             </AnimatePresence>
 
           </div>
+
+          <div className="flex justify-center mt-5">
+            <button
+              type="button"
+              onClick={onHowToPlay}
+              className="text-neutral-500 hover:text-green-500 transition-colors uppercase tracking-wider"
+              style={{ fontSize: '12px' }}
+            >
+              How to Play
+            </button>
+          </div>
+
         </motion.div>
       </div>
 
