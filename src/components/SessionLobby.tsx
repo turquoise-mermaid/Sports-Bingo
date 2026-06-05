@@ -14,6 +14,7 @@ interface SessionLobbyProps {
   onPrivacyPolicy: () => void;
   onTermsOfService: () => void;
   onAccount: () => void;
+  onSupport: () => void;
   onShowLogin: (mode: 'signin' | 'signup') => void;
 }
 
@@ -35,7 +36,7 @@ const INFO = {
   },
 };
 
-export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJoin, onFaq, onPrivacyPolicy, onTermsOfService, onAccount, onShowLogin }: SessionLobbyProps) {
+export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJoin, onFaq, onPrivacyPolicy, onTermsOfService, onAccount, onSupport, onShowLogin }: SessionLobbyProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [infoPopup, setInfoPopup] = useState<'solo' | 'multiplayer' | 'join' | null>(null);
   const [joinExpanded, setJoinExpanded] = useState(false);
@@ -264,7 +265,7 @@ export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJo
                 <button type="button" onClick={() => { setMenuOpen(false); onFaq(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700" style={{ fontSize: '15px' }}>FAQs</button>
                 <button type="button" onClick={() => { setMenuOpen(false); onPrivacyPolicy(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700" style={{ fontSize: '15px' }}>Privacy Policy</button>
                 <button type="button" onClick={() => { setMenuOpen(false); onTermsOfService(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700" style={{ fontSize: '15px' }}>Terms of Service</button>
-                <a href="https://github.com/turquoise-mermaid/Sports-Bingo/issues/new" target="_blank" rel="noopener noreferrer" className="text-neutral-200 hover:text-green-500 transition-colors py-3" style={{ fontSize: '15px' }}>Submit an Issue</a>
+                <button type="button" onClick={() => { setMenuOpen(false); onSupport(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3" style={{ fontSize: '15px' }}>Submit an Issue</button>
               </div>
             </motion.div>
           </>
