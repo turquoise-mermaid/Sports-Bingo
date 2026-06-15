@@ -37,9 +37,9 @@ const soccerItems: BingoItem[] = [
 { name: 'Team Scarf', description: 'A supporter holds or wears the club\'s official scarf. ⚠️ Specific to UK/European football.' },
 //{ name: 'Fan Tears', description: 'A fan is visibly crying, from joy or heartbreak.' },
 { name: 'Banner', description: 'A large sign or cloth displayed by fans with a message or club crest.' },
-//{ name: 'Fan Dance', description: 'Fans break into a coordinated or spontaneous dance in the stands.' },
+{ name: 'Fan Dance', description: 'Fans break into a coordinated or spontaneous dance in the stands.' },
 { name: 'Crowd Roar', description: 'The entire stadium erupts in noise simultaneously.' },
-{ name: 'Security Check', description: 'Stadium staff checks a fan or intervenes in the stands.' },
+//{ name: 'Security Check', description: 'Stadium staff checks a fan or intervenes in the stands.' },
 { name: 'Kickoff', description: 'The match begins or restarts with a player passing the ball from the center circle.' },
 { name: 'Goal Celebration', description: 'Players celebrate together immediately after scoring.' },
 { name: 'Manager Yelling', description: 'Manager shouts instructions or protests from the touchline. ⚠️ "Manager" = "Coach/Head Coach" in US/MLS. ⚠️ "Touchline" = "Sideline" in US/MLS.', group: 'manager' },
@@ -87,8 +87,8 @@ const soccerItems: BingoItem[] = [
 //{ name: 'Goalkeeper Goal', description: 'The goalkeeper scores a goal, either from open play or a direct kick.' },
 //{ name: 'Rabona', description: 'A player wraps their kicking foot behind their standing leg to strike the ball.' },
 //{ name: 'Panenka Penalty', description: 'A penalty taken with a soft chip down the center of the goal while the keeper dives to one side.' },
-//{ name: 'Water Break', description: 'Play is temporarily stopped for players to hydrate, common in hot weather matches.' },
-//{ name: 'Vuvuzela', description: 'A plastic horn blown by fans, famous from the 2010 World Cup in South Africa. ⚠️ Specific to African football and World Cup' },
+{ name: 'Water Break', description: 'Play is temporarily stopped for players to hydrate, common in hot weather matches.' },
+{ name: 'Vuvuzela', description: 'A plastic horn blown by fans, famous from the 2010 World Cup in South Africa. ⚠️ Specific to African football and World Cup' },
 //{ name: 'Ref Protest Sign', description: 'A fan in the stands holds up a visible sign directed at the referee, expressing disagreement with calls made during' },
 ];
 

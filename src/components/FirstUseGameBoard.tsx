@@ -37,13 +37,21 @@ function checkBingo(marked: Set<number>): boolean {
   return WINNING_PATTERNS.some(p => p.every(i => marked.has(i)));
 }
 
-function generateBoardOrder(totalItems: number): number[] {
-  const available = Array.from({ length: totalItems }, (_, i) => i);
-  for (let i = available.length - 1; i > 0; i--) {
+function generateBoardOrder(items: BingoItem[]): number[] {
+  const shuffled = Array.from({ length: items.length }, (_, i) => i);
+  for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [available[i], available[j]] = [available[j], available[i]];
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  const selected = available.slice(0, 24);
+  const usedGroups = new Set<string>();
+  const selected: number[] = [];
+  for (const idx of shuffled) {
+    if (selected.length === 24) break;
+    const group = items[idx].group;
+    if (group && usedGroups.has(group)) continue;
+    if (group) usedGroups.add(group);
+    selected.push(idx);
+  }
   return [...selected.slice(0, 12), -1, ...selected.slice(12)];
 }
 
@@ -77,7 +85,7 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
 
   useEffect(() => {
     const items = getBingoItems(sport);
-    const order = generateBoardOrder(items.length);
+    const order = generateBoardOrder(items);
     setBingoItems(boardFromOrder(items, order));
     if (!initialHasBingo && !gameStartedLogged.current) {
       gameStartedLogged.current = true;
