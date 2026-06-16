@@ -13,6 +13,21 @@ export interface PlayerRow {
   last_marked_at?: string;
 }
 
+export interface SessionRow {
+  id: number;
+  sport: string;
+  group_name?: string;
+  join_code?: string;
+  started_at?: string;
+  expires_at?: string;
+  status?: string;
+  game_mode?: string;
+  use_shared_terms?: boolean;
+  shared_terms?: number[] | null;
+}
+
+const SESSION_SELECT = 'id, sport, group_name, join_code, started_at, expires_at, status, game_mode, use_shared_terms, shared_terms';
+
 export async function createSession(sport: Sport, userId: string) {
   const terms = getBingoItems(sport);
 
@@ -81,7 +96,9 @@ export async function createMultiplayerSession(
   userId: string,
   groupName: string,
   initials: string,
-  joinCode: string
+  joinCode: string,
+  gameMode: 'bingo' | 'blackout' = 'bingo',
+  useSharedTerms: boolean = false
 ) {
   const terms = getBingoItems(sport);
   const now = new Date();
@@ -97,6 +114,8 @@ export async function createMultiplayerSession(
       started_at: now.toISOString(),
       expires_at: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
       status: 'active',
+      game_mode: gameMode,
+      use_shared_terms: useSharedTerms,
     })
     .select()
     .single();
@@ -118,19 +137,19 @@ export async function createMultiplayerSession(
 
   if (playerError) throw playerError;
 
-  return { session, player };
+  return { session: session as SessionRow, player };
 }
 
 export async function joinSessionByCode(joinCode: string, userId: string, initials: string) {
   const { data: sessions, error: sessionError } = await supabase
     .from('sessions_multi')
-    .select('id, sport, group_name, join_code, status, expires_at')
+    .select(SESSION_SELECT)
     .eq('join_code', joinCode)
     .eq('status', 'active')
     .gt('expires_at', new Date().toISOString())
     .limit(1);
 
-  const session = sessions?.[0];
+  const session = sessions?.[0] as SessionRow | undefined;
   if (sessionError || !session) throw new Error('Session not found or expired');
 
   const { count, error: countError } = await supabase
@@ -166,13 +185,13 @@ export async function joinSessionByCode(joinCode: string, userId: string, initia
 export async function rejoinSession(joinCode: string, userId: string) {
   const { data: sessions, error: sessionError } = await supabase
     .from('sessions_multi')
-    .select('id, sport, group_name, join_code, status, expires_at')
+    .select(SESSION_SELECT)
     .eq('join_code', joinCode)
     .eq('status', 'active')
     .gt('expires_at', new Date().toISOString())
     .limit(1);
 
-  const session = sessions?.[0];
+  const session = sessions?.[0] as SessionRow | undefined;
   if (sessionError || !session) throw new Error('Session not found or expired.');
 
   const { data: players, error: playerError } = await supabase
@@ -192,13 +211,13 @@ export async function rejoinSession(joinCode: string, userId: string) {
 export async function loginAsHost(joinCode: string, userId: string) {
   const { data: sessions, error } = await supabase
     .from('sessions_multi')
-    .select('id, sport, group_name, join_code, status, expires_at')
+    .select(SESSION_SELECT)
     .eq('join_code', joinCode)
     .eq('status', 'active')
     .gt('expires_at', new Date().toISOString())
     .limit(1);
 
-  const session = sessions?.[0];
+  const session = sessions?.[0] as SessionRow | undefined;
   if (error || !session) throw new Error('Session not found or expired');
 
   const { data: players, error: playersError } = await supabase
@@ -245,14 +264,43 @@ export async function getSessionPlayers(sessionId: number): Promise<PlayerRow[]>
   return (data ?? []) as PlayerRow[];
 }
 
-export async function getSessionById(sessionId: number) {
+export async function getSessionById(sessionId: number): Promise<SessionRow | null> {
   const { data, error } = await supabase
     .from('sessions_multi')
-    .select('id, sport, group_name, join_code, started_at, expires_at, status')
+    .select(SESSION_SELECT)
     .eq('id', sessionId)
     .single();
   if (error) throw error;
-  return data;
+  return data as SessionRow;
+}
+
+// Saves the host's confirmed terms to the session, making them visible to guests
+export async function confirmSharedTerms(sessionId: number, terms: number[]) {
+  const { error } = await supabase
+    .from('sessions_multi')
+    .update({ shared_terms: terms })
+    .eq('id', sessionId);
+  if (error) throw error;
+}
+
+// Subscribes to session row updates (used by guests waiting for host to confirm terms)
+export function subscribeToSessionUpdate(
+  sessionId: number,
+  onUpdate: (session: Partial<SessionRow>) => void
+): RealtimeChannel {
+  return supabase
+    .channel(`session-row-${sessionId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'sessions_multi',
+        filter: `id=eq.${sessionId}`,
+      },
+      (payload) => onUpdate(payload.new as Partial<SessionRow>)
+    )
+    .subscribe();
 }
 
 export function subscribeToSessionPlayers(

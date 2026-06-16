@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Trophy } from 'lucide-react';
+import { ArrowLeft, Trophy, Info } from 'lucide-react';
 import { Sport } from '../App';
 import { BingoSquare } from './BingoSquare';
 import { BBExpandedSquareSheet } from './BBExpandedSquareSheet';
@@ -76,10 +76,10 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
   const [expandedSquare, setExpandedSquare] = useState<number | null>(null);
   const doubleClickEnabled = true;
   const [hasBingo, setHasBingo] = useState(initialHasBingo ?? false);
-  const [showBanner, setShowBanner] = useState(initialHasBingo ?? false);
-  const [showSignUpCard, setShowSignUpCard] = useState(initialHasBingo ?? false);
-  const [showThankYou, setShowThankYou] = useState(false);
-  const [showCloseMessage, setShowCloseMessage] = useState(false);
+  const [showBanner, setShowBanner] = useState(false);
+  const [showBlackoutChoice, setShowBlackoutChoice] = useState(false);
+  const [showBlackoutUpsell, setShowBlackoutUpsell] = useState(false);
+  const [showBlackoutInfo, setShowBlackoutInfo] = useState(false);
   const [showNewBoardUpsell, setShowNewBoardUpsell] = useState(false);
   const gameStartedLogged = useRef(false);
 
@@ -98,7 +98,10 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
     setHasBingo(true);
     logEvent({ eventType: 'bingo_achieved', sport, isMultiplayer: false, userId }, isDev ?? false);
     setShowBanner(true);
-    setTimeout(() => setShowSignUpCard(true), 1000);
+    setTimeout(() => {
+      setShowBanner(false);
+      setShowBlackoutChoice(true);
+    }, 3000);
   }, [markedSquares]);
 
   const handleConfirmMark = (index: number) => {
@@ -123,15 +126,6 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
   const handleBackToLobby = () => {
     logEvent({ eventType: 'game_exited', sport, isMultiplayer: false, hadBingo: hasBingo, userId }, isDev ?? false);
     onBackToLobby();
-  };
-
-  const handleNo = () => {
-    setShowThankYou(true);
-  };
-
-  const handleExitApp = () => {
-    window.close();
-    setShowCloseMessage(true);
   };
 
   return (
@@ -210,7 +204,7 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
         </div>
       </div>
 
-      <Confetti trigger={hasBingo && !initialHasBingo} />
+      <Confetti trigger={hasBingo} />
 
       {/* New Board upsell popup */}
       {showNewBoardUpsell && (
@@ -248,97 +242,142 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
         onUnmark={() => expandedSquare !== null && handleConfirmUnmark(expandedSquare)}
       />
 
-      {/* Centered overlay — BINGO! banner + card stacked */}
+      {/* BINGO! banner */}
       <AnimatePresence>
         {showBanner && (
-          <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', zIndex: 50, pointerEvents: 'none' }}>
-            <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              exit={{ scale: 0, rotate: 180 }}
-              transition={{ type: 'spring', duration: 0.6 }}
-              style={{ pointerEvents: 'auto' }}
-            >
-              <div className="bg-gradient-to-r from-green-500 to-green-600 text-zinc-900 px-6 py-4 rounded shadow-2xl flex items-center gap-3 border-2 border-zinc-800">
-                <Trophy style={{ width: '2.5rem', height: '2.5rem' }} />
-                <div>
-                  <h2 className="mb-0.5 uppercase tracking-wider">BINGO!</h2>
-                  <p>You got five in a row!</p>
+          <motion.div
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            exit={{ scale: 0, rotate: 180 }}
+            transition={{ type: 'spring', duration: 0.6 }}
+            style={{ position: 'fixed', top: '25%', left: '50%', transform: 'translateX(-50%)', zIndex: 50 }}
+          >
+            <div className="bg-gradient-to-r from-green-500 to-green-600 text-zinc-900 px-6 py-4 rounded shadow-2xl flex items-center gap-3 border-2 border-zinc-800">
+              <Trophy style={{ width: '2.5rem', height: '2.5rem' }} />
+              <div>
+                <h2 className="mb-0.5 uppercase tracking-wider">BINGO!</h2>
+                <p>You got five in a row!</p>
+              </div>
+              <Trophy style={{ width: '2.5rem', height: '2.5rem' }} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Blackout choice popup — revealed after banner exits */}
+      <AnimatePresence>
+        {showBlackoutChoice && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ type: 'spring', damping: 25 }}
+            style={{ position: 'fixed', top: '25%', left: '50%', transform: 'translateX(-50%)', zIndex: 40, width: '100%', maxWidth: '320px', padding: '0 16px' }}
+          >
+            <div className="bg-zinc-800 border-2 border-green-500 rounded-lg p-5 text-center shadow-2xl">
+              <p className="text-neutral-300 mb-4" style={{ fontSize: '15px' }}>Keep going?</p>
+              <div className="flex gap-3">
+                <div className="flex items-center gap-1 flex-1">
+                  <Button
+                    onClick={() => { setShowBlackoutChoice(false); setShowBlackoutUpsell(true); }}
+                    className="flex-1 text-zinc-900 h-10"
+                    style={{ background: 'linear-gradient(to right, #17BB34, #14a12d)', fontSize: '13px' }}
+                  >
+                    Keep Going
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setShowBlackoutInfo(true)}
+                    className="text-neutral-500 hover:text-green-500 transition-colors flex-shrink-0"
+                    aria-label="Blackout Bingo info"
+                  >
+                    <Info className="w-4 h-4" />
+                  </button>
                 </div>
-                <Trophy style={{ width: '2.5rem', height: '2.5rem' }} />
+                <Button
+                  onClick={() => { setShowBlackoutChoice(false); setShowNewBoardUpsell(true); }}
+                  variant="outline"
+                  className="flex-1 border-zinc-600 text-neutral-300 hover:bg-zinc-700 h-10"
+                  style={{ fontSize: '13px' }}
+                >
+                  New Board
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Blackout upsell popup */}
+      <AnimatePresence>
+        {showBlackoutUpsell && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowBlackoutUpsell(false)}
+              style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 50 }}
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+            >
+              <div className="bg-zinc-800 border-2 border-green-500 rounded-lg p-6 w-full max-w-xs text-center">
+                <p className="text-neutral-200 mb-5" style={{ fontSize: '15px' }}>
+                  Create an account to use Blackout Mode.
+                </p>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => setShowBlackoutUpsell(false)}
+                    variant="outline"
+                    className="flex-1 border-zinc-600 text-neutral-300 hover:bg-zinc-700 h-10"
+                  >
+                    Maybe Later
+                  </Button>
+                  <Button
+                    onClick={() => { setShowBlackoutUpsell(false); onShowLogin('signup'); }}
+                    className="flex-1 text-zinc-900 h-10"
+                    style={{ background: 'linear-gradient(to right, #17BB34, #14a12d)' }}
+                  >
+                    Sign Up
+                  </Button>
+                </div>
               </div>
             </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
-            {showSignUpCard && (
-              <motion.div
-                initial={{ y: 60, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 60, opacity: 0 }}
-                transition={{ type: 'spring', damping: 25 }}
-                style={{ width: '100%', maxWidth: '28rem', padding: '0 1rem', pointerEvents: 'auto' }}
-              >
-                <div className="bg-zinc-800 border-2 border-green-500 rounded-lg p-6 text-center">
-                  {showThankYou ? (
-                    <>
-                      <p className="text-neutral-200 mb-5" style={{ fontSize: '15px' }}>
-                        Thank you for playing Fanatic Bingo!
-                      </p>
-                      {showCloseMessage ? (
-                        <>
-                          <p className="text-neutral-400 mb-4" style={{ fontSize: '14px' }}>
-                            You can close this tab.
-                          </p>
-                          <Button
-                            onClick={handleBackToLobby}
-                            className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-zinc-900 h-10"
-                          >
-                            Back to Lobby
-                          </Button>
-                        </>
-                      ) : (
-                        <div className="flex gap-3">
-                          <Button
-                            onClick={handleExitApp}
-                            variant="outline"
-                            className="flex-1 border-zinc-600 text-neutral-300 hover:bg-zinc-700 h-10"
-                          >
-                            Exit Application
-                          </Button>
-                          <Button
-                            onClick={handleBackToLobby}
-                            className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-zinc-900 h-10"
-                          >
-                            Back to Lobby
-                          </Button>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-neutral-200 mb-5" style={{ fontSize: '15px' }}>
-                        Create a free account to play again.
-                      </p>
-                      <div className="flex gap-3">
-                        <Button
-                          onClick={handleNo}
-                          variant="outline"
-                          className="flex-1 border-zinc-600 text-neutral-300 hover:bg-zinc-700 h-10"
-                        >
-                          No
-                        </Button>
-                        <Button
-                          onClick={() => onShowLogin('signup')}
-                          className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-zinc-900 h-10"
-                        >
-                          Sign Up
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </div>
+      {/* Blackout info sheet */}
+      <AnimatePresence>
+        {showBlackoutInfo && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowBlackoutInfo(false)}
+              style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 50 }}
+            />
+            <motion.div
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25 }}
+              style={{ position: 'fixed', inset: '0 0 0 0', bottom: 0, top: 'auto', zIndex: 60, backgroundColor: '#27272a', borderTop: '4px solid #17BB34', borderRadius: '12px 12px 0 0', padding: '20px' }}
+            >
+              <div className="max-w-md mx-auto text-center">
+                <h3 className="text-neutral-200 uppercase tracking-wide mb-3">Blackout Bingo</h3>
+                <p className="text-neutral-400 mb-6">Mark every square on your board to win. Create a free account to play.</p>
+                <Button
+                  onClick={() => setShowBlackoutInfo(false)}
+                  className="w-full text-zinc-900 h-10"
+                  style={{ background: 'linear-gradient(to right, #17BB34, #14a12d)' }}
+                >
+                  Got it
+                </Button>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
