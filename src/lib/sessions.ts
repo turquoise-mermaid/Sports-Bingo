@@ -274,7 +274,6 @@ export async function getSessionById(sessionId: number): Promise<SessionRow | nu
   return data as SessionRow;
 }
 
-// Saves the host's confirmed terms to the session, making them visible to guests
 export async function confirmSharedTerms(sessionId: number, terms: number[]) {
   const { error } = await supabase
     .from('sessions_multi')
@@ -283,13 +282,21 @@ export async function confirmSharedTerms(sessionId: number, terms: number[]) {
   if (error) throw error;
 }
 
-// Subscribes to session row updates (used by guests waiting for host to confirm terms)
+export async function endSession(sessionId: number) {
+  const { error } = await supabase
+    .from('sessions_multi')
+    .update({ status: 'host_ended' })
+    .eq('id', sessionId);
+  if (error) throw error;
+}
+
 export function subscribeToSessionUpdate(
   sessionId: number,
-  onUpdate: (session: Partial<SessionRow>) => void
+  onUpdate: (session: Partial<SessionRow>) => void,
+  channelSuffix: string = ''
 ): RealtimeChannel {
   return supabase
-    .channel(`session-row-${sessionId}`)
+    .channel(`session-row-${sessionId}${channelSuffix}`)
     .on(
       'postgres_changes',
       {

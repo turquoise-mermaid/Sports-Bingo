@@ -150,33 +150,54 @@ export function HostCredentials({ onBack, onContinue, defaultUsername, isAnonymo
                 First to Blackout
               </button>
             </div>
+            <p className="text-neutral-500 mt-2" style={{ fontSize: '12px' }}>
+              {gameMode === 'bingo'
+                ? 'First player to mark five squares in a row wins.'
+                : 'First player to mark every square on their board wins.'}
+            </p>
           </div>
 
-          {/* Shared terms toggle */}
+          {/* Shared terms */}
           <div className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-neutral-300 uppercase tracking-wider" style={{ fontSize: '13px' }}>Shared Terms</span>
-                <button
-                  type="button"
-                  onClick={() => setInfoOpen('sharedTerms')}
-                  className="text-neutral-500 hover:text-green-500 transition-colors"
-                  aria-label="Shared Terms info"
-                >
-                  <Info className="w-4 h-4" />
-                </button>
-              </div>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-neutral-300 uppercase tracking-wider" style={{ fontSize: '13px' }}>Shared Terms</span>
               <button
                 type="button"
-                onClick={isAnonymous ? handleAnonymousTap : () => setUseSharedTerms(v => !v)}
-                className={`relative w-12 h-6 rounded-full transition-colors ${isAnonymous ? 'opacity-50' : ''}`}
-                style={{ backgroundColor: useSharedTerms && !isAnonymous ? GREEN : '#52525b' }}
-                aria-label="Toggle shared terms"
+                onClick={() => setInfoOpen('sharedTerms')}
+                className="text-neutral-500 hover:text-green-500 transition-colors"
+                aria-label="Shared Terms info"
               >
-                <span
-                  className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
-                  style={{ transform: useSharedTerms && !isAnonymous ? 'translateX(24px)' : 'translateX(0)' }}
-                />
+                <Info className="w-4 h-4" />
+              </button>
+            </div>
+            <div
+              className={`flex rounded overflow-hidden border-2 ${isAnonymous ? 'opacity-50' : ''}`}
+              style={{ borderColor: GREEN }}
+            >
+              <button
+                type="button"
+                onClick={isAnonymous ? handleAnonymousTap : () => setUseSharedTerms(false)}
+                className="flex-1 py-2 text-center transition-colors"
+                style={{
+                  fontSize: '13px',
+                  backgroundColor: !useSharedTerms ? GREEN : 'transparent',
+                  color: !useSharedTerms ? '#18181b' : '#a1a1aa',
+                }}
+              >
+                No
+              </button>
+              <button
+                type="button"
+                onClick={isAnonymous ? handleAnonymousTap : () => setUseSharedTerms(true)}
+                className="flex-1 py-2 text-center transition-colors"
+                style={{
+                  fontSize: '13px',
+                  borderLeft: `2px solid ${GREEN}`,
+                  backgroundColor: useSharedTerms && !isAnonymous ? GREEN : 'transparent',
+                  color: useSharedTerms && !isAnonymous ? '#18181b' : '#a1a1aa',
+                }}
+              >
+                Yes
               </button>
             </div>
             {useSharedTerms && !isAnonymous && (
@@ -274,6 +295,7 @@ export function HostCredentials({ onBack, onContinue, defaultUsername, isAnonymo
                 <button
                   type="button"
                   onClick={() => setShowUpsell(false)}
+                  aria-label="Close"
                   className="absolute top-3 right-3 text-neutral-500 hover:text-neutral-300"
                 >
                   <X className="w-4 h-4" />

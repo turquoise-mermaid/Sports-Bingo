@@ -15,6 +15,7 @@ import {
   subscribeToSessionPlayers,
   subscribeToSessionUpdate,
   confirmSharedTerms,
+  endSession,
   PlayerRow,
 } from '../lib/sessions';
 import { Leaderboard } from './Leaderboard';
@@ -75,7 +76,6 @@ function generateBoardOrder(items: BingoItem[]): number[] {
   return [...selected.slice(0, 12), -1, ...selected.slice(12)];
 }
 
-// Shuffle just the positions of a fixed set of 24 term indices
 function generateBoardFromTermIndices(termIndices: number[]): number[] {
   const shuffled = [...termIndices];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -89,52 +89,7 @@ function boardFromOrder(items: BingoItem[], order: number[]): (BingoItem | null)
   return order.map(i => i === -1 ? null : items[i]);
 }
 
-function WinOrExpirePopup({
-  title,
-  message,
-  onYes,
-  onNo,
-  borderColor = 'border-green-500',
-  icon,
-}: {
-  title: string;
-  message: string;
-  onYes: () => void;
-  onNo: () => void;
-  borderColor?: string;
-  icon?: React.ReactNode;
-}) {
-  return (
-    <>
-      <motion.div
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="fixed inset-0 backdrop-blur-sm z-50" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
-      />
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center px-4"
-      >
-        <motion.div
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          exit={{ scale: 0.8 }}
-          transition={{ type: 'spring', damping: 25 }}
-          className={`w-full max-w-xs bg-zinc-800 border-2 ${borderColor} rounded-lg p-6 text-center`}
-        >
-          {icon && <div className="flex justify-center mb-3">{icon}</div>}
-          <h3 className="text-neutral-200 uppercase tracking-wider mb-3">{title}</h3>
-          <p className="text-neutral-400 mb-6">{message}</p>
-          <div className="flex gap-3">
-            <Button onClick={onNo} variant="outline" className="flex-1 border-zinc-600 text-neutral-300 hover:bg-zinc-700 h-10">No</Button>
-            <Button onClick={onYes} className="flex-1 text-zinc-900 h-10" style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})` }}>Yes</Button>
-          </div>
-        </motion.div>
-      </motion.div>
-    </>
-  );
-}
+const PENDING_BOARD_KEY = 'sportsbingo_pending_board';
 
 export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, gameMode = 'bingo', useSharedTerms = false, onBackToSports, onGameEnd }: BingoBoardV2Props) {
   const isMultiplayer = !!sessionInfo;
@@ -148,7 +103,6 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
   const [boardReady, setBoardReady] = useState(false);
   const [expandedSquare, setExpandedSquare] = useState<number | null>(null);
   const [hasBingo, setHasBingo] = useState(false);
-  const doubleClickEnabled = true;
 
   // Solo win states
   const [showBingoMessage, setShowBingoMessage] = useState(false);
@@ -163,7 +117,9 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const [show30MinWarning, setShow30MinWarning] = useState(false);
   const [showExpiredPopup, setShowExpiredPopup] = useState(false);
-  const [showMultiplayerWin, setShowMultiplayerWin] = useState(false);
+  const [showWinPopup, setShowWinPopup] = useState(false);
+  const [showHostEndedPopup, setShowHostEndedPopup] = useState(false);
+  const [sessionTimeLeft, setSessionTimeLeft] = useState('');
 
   // Shared terms state
   const [shufflesRemaining, setShufflesRemaining] = useState(3);
@@ -179,8 +135,8 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
 
   const warned30Ref = useRef(false);
   const allHaveBingoRef = useRef(false);
+  const hostEndedShownRef = useRef(false);
 
-  // Keep allHaveBingoRef current
   useEffect(() => {
     if (!sessionInfo) return;
     allHaveBingoRef.current = progressPlayers.every(p => {
@@ -198,7 +154,6 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
     const items = getBingoItems(sport);
     async function init() {
       if (sessionInfo) {
-        // Try loading saved board first (handles reconnect for all cases)
         try {
           const saved = await loadPlayerBoard(sessionInfo.playerId);
           if (saved.board_order?.length === 25) {
@@ -209,7 +164,6 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
             setBingoItems(boardFromOrder(items, saved.board_order));
             setMarkedSquares(marked);
             setHasBingo(isBlackoutMode ? marked.size === 25 : checkBingo(marked));
-            // Check if terms are already confirmed (reconnect)
             if (imHost && useSharedTerms) {
               const session = await getSessionById(sessionInfo.sessionId).catch(() => null);
               if (session?.shared_terms?.length) setTermsConfirmed(true);
@@ -219,7 +173,6 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
           }
         } catch { /* fall through */ }
 
-        // Guest waiting for shared terms
         if (!imHost && useSharedTerms) {
           const session = await getSessionById(sessionInfo.sessionId).catch(() => null);
           if (session?.shared_terms?.length === 24) {
@@ -233,14 +186,27 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
             return;
           }
         } else {
-          // Host or non-shared-terms: generate fresh board
           const order = generateBoardOrder(items);
           setBoardOrder(order);
           setBingoItems(boardFromOrder(items, order));
           await savePlayerBoard(sessionInfo.playerId, order, [12]).catch(() => {});
         }
       } else {
-        // Solo
+        // Solo: restore board saved before signup navigation
+        const pending = localStorage.getItem(PENDING_BOARD_KEY);
+        if (pending) {
+          try {
+            const { boardOrder: savedOrder, markedSquares: savedMarked, blackoutMode: savedBlackout } = JSON.parse(pending);
+            localStorage.removeItem(PENDING_BOARD_KEY);
+            setBoardOrder(savedOrder);
+            setBingoItems(boardFromOrder(items, savedOrder));
+            setMarkedSquares(new Set<number>(savedMarked));
+            setHasBingo(true);
+            if (savedBlackout) setBlackoutMode(true);
+            setBoardReady(true);
+            return;
+          } catch { /* fall through */ }
+        }
         const order = generateBoardOrder(items);
         setBoardOrder(order);
         setBingoItems(boardFromOrder(items, order));
@@ -251,14 +217,16 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
     init();
   }, [sport, sessionInfo]);
 
-  // Guest: subscribe to session updates while waiting for host to confirm terms
+  // Guest: poll + subscribe for shared terms confirmation and host-ended status
   useEffect(() => {
-    if (!waitingForHost || !sessionInfo || imHost) return;
+    if (!sessionInfo || imHost) return;
     const items = getBingoItems(sport);
 
-    const checkTerms = async () => {
+    const checkSession = async () => {
       const session = await getSessionById(sessionInfo.sessionId).catch(() => null);
-      if (session?.shared_terms?.length === 24) {
+      if (!session) return;
+
+      if (waitingForHost && session.shared_terms?.length === 24) {
         const order = generateBoardFromTermIndices(session.shared_terms);
         setBoardOrder(order);
         setBingoItems(boardFromOrder(items, order));
@@ -266,22 +234,30 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
         setWaitingForHost(false);
         logEvent({ eventType: 'game_started', sport, isMultiplayer: true, userId, sessionId: sessionInfo.sessionId, playerId: sessionInfo.playerId }, isDev ?? false);
       }
+
+      if (session.status === 'host_ended' && !hostEndedShownRef.current) {
+        hostEndedShownRef.current = true;
+        setShowHostEndedPopup(true);
+        if (expiresAt) {
+          const ms = expiresAt.getTime() - Date.now();
+          const hours = Math.floor(ms / (1000 * 60 * 60));
+          const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+          setSessionTimeLeft(hours > 0 ? `${hours}h ${minutes}m` : `${minutes} min`);
+        }
+      }
     };
 
-    const channel = subscribeToSessionUpdate(sessionInfo.sessionId, (updated) => {
-      if (updated.shared_terms?.length === 24) checkTerms();
-    });
-
-    const poll = setInterval(checkTerms, 4000);
-    checkTerms();
+    const channel = subscribeToSessionUpdate(sessionInfo.sessionId, () => { checkSession(); }, '-guest');
+    const poll = setInterval(checkSession, 4000);
+    checkSession();
 
     return () => {
       clearInterval(poll);
       supabase.removeChannel(channel);
     };
-  }, [waitingForHost, sessionInfo, imHost, sport]);
+  }, [sessionInfo, imHost, sport, waitingForHost, expiresAt]);
 
-  // Fetch session expiry + all players
+  // Fetch session expiry + initial player list
   useEffect(() => {
     if (!sessionInfo) return;
     getSessionById(sessionInfo.sessionId)
@@ -302,7 +278,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
       .catch(() => {});
   }, [sessionInfo]);
 
-  // Always keep current player in the progress list using local state as source of truth
+  // Keep current player's squares current in the leaderboard list
   useEffect(() => {
     if (!sessionInfo || !boardReady) return;
     setProgressPlayers(prev => {
@@ -321,7 +297,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
     });
   }, [markedSquares, boardReady, sessionInfo]);
 
-  // Realtime subscription — all players including self
+  // Realtime: other players' progress
   useEffect(() => {
     if (!sessionInfo) return;
 
@@ -352,7 +328,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
     };
   }, [sessionInfo]);
 
-  // Timer: 30-min warning + expiry detection
+  // Timer: 30-min warning + expiry check
   useEffect(() => {
     if (!expiresAt) return;
     warned30Ref.current = false;
@@ -377,31 +353,27 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
   // Win detection
   useEffect(() => {
     if (isMultiplayer) {
-      // Multiplayer blackout: all 25 marked
       if (isBlackoutMode) {
         if (markedSquares.size < 25 || hasBingo) return;
-        setHasBingo(true);
-        logEvent({ eventType: 'bingo_achieved', sport, isMultiplayer: true, userId, sessionId: sessionInfo?.sessionId, playerId: sessionInfo?.playerId }, isDev ?? false);
       } else {
         if (!checkBingo(markedSquares) || hasBingo) return;
-        setHasBingo(true);
-        logEvent({ eventType: 'bingo_achieved', sport, isMultiplayer: true, userId, sessionId: sessionInfo?.sessionId, playerId: sessionInfo?.playerId }, isDev ?? false);
       }
+      setHasBingo(true);
+      setShowWinPopup(true);
+      logEvent({ eventType: 'bingo_achieved', sport, isMultiplayer: true, userId, sessionId: sessionInfo?.sessionId, playerId: sessionInfo?.playerId }, isDev ?? false);
     } else {
-      // Solo: blackout mode
       if (blackoutMode) {
         if (markedSquares.size < 25 || hasBlackout) return;
         setHasBlackout(true);
         setShowBlackoutWin(true);
         logEvent({ eventType: 'bingo_achieved', sport, isMultiplayer: false, userId }, isDev ?? false);
       } else {
-        // Solo: regular bingo — show banner then choice popup
         if (!checkBingo(markedSquares) || hasBingo) return;
         setHasBingo(true);
         logEvent({ eventType: 'bingo_achieved', sport, isMultiplayer: false, userId }, isDev ?? false);
         setShowBingoMessage(true);
-        setShowBlackoutChoice(true); // mount behind bingo banner
-        setTimeout(() => setShowBingoMessage(false), 3000); // banner exits, choice revealed
+        setShowBlackoutChoice(true);
+        setTimeout(() => setShowBingoMessage(false), 3000);
       }
     }
   }, [markedSquares]);
@@ -443,7 +415,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
     setBlackoutMode(false);
     setHasBlackout(false);
     setShowBlackoutWin(false);
-    setShowMultiplayerWin(false);
+    setShowWinPopup(false);
     if (sessionInfo) {
       savePlayerBoard(sessionInfo.playerId, order, [12]).catch(() => {});
     }
@@ -455,9 +427,15 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
     try {
       await confirmSharedTerms(sessionInfo.sessionId, termIndices);
       setTermsConfirmed(true);
-    } catch {
-      // ignore — share button will stay locked
+    } catch { /* share button stays locked */ }
+  };
+
+  const handleEndGame = async () => {
+    if (sessionInfo && imHost) {
+      await endSession(sessionInfo.sessionId).catch(() => {});
     }
+    logEvent({ eventType: 'game_exited', sport, isMultiplayer: !!sessionInfo, hadBingo: hasBingo, userId, sessionId: sessionInfo?.sessionId, playerId: sessionInfo?.playerId }, isDev ?? false);
+    onGameEnd();
   };
 
   const handleShare = async () => {
@@ -494,22 +472,13 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
   }
 
   const expandedItem = expandedSquare !== null ? bingoItems[expandedSquare] : null;
-
-  const handleExitToSports = () => {
-    logEvent({ eventType: 'game_exited', sport, isMultiplayer: !!sessionInfo, hadBingo: hasBingo, userId, sessionId: sessionInfo?.sessionId, playerId: sessionInfo?.playerId }, isDev ?? false);
-    onBackToSports();
-  };
-
-  const handleExitGame = () => {
-    logEvent({ eventType: 'game_exited', sport, isMultiplayer: !!sessionInfo, hadBingo: hasBingo, userId, sessionId: sessionInfo?.sessionId, playerId: sessionInfo?.playerId }, isDev ?? false);
-    onGameEnd();
-  };
+  const guestCanNewBoard = !isMultiplayer || imHost || !useSharedTerms;
 
   return (
     <div className="min-h-screen p-4 flex flex-col">
       <Confetti trigger={hasBingo || hasBlackout} />
 
-      {/* 30-min warning banner */}
+      {/* 30-min warning */}
       <AnimatePresence>
         {show30MinWarning && (
           <motion.div
@@ -526,58 +495,140 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
       {/* Expired popup */}
       <AnimatePresence>
         {showExpiredPopup && (
-          <WinOrExpirePopup
-            title="Your Game Has Expired"
-            message="Would you like to start a new game?"
-            onYes={onGameEnd}
-            onNo={() => setShowExpiredPopup(false)}
-            borderColor="border-zinc-600"
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Multiplayer win popup */}
-      <AnimatePresence>
-        {showMultiplayerWin && (
-          <WinOrExpirePopup
-            title="Congratulations!"
-            message="Would you like to start a new game?"
-            onYes={onGameEnd}
-            onNo={() => setShowMultiplayerWin(false)}
-            borderColor="border-green-500"
-            icon={<Trophy className="w-10 h-10 text-green-500" />}
-          />
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 backdrop-blur-sm z-50" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }} />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center px-4">
+              <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 25 }} className="w-full max-w-xs bg-zinc-800 border-2 border-zinc-600 rounded-lg p-6 text-center">
+                <h3 className="text-neutral-200 uppercase tracking-wider mb-3">Your Game Has Expired</h3>
+                <p className="text-neutral-400 mb-6">Would you like to go back to the lobby?</p>
+                <div className="flex gap-3">
+                  <Button onClick={() => setShowExpiredPopup(false)} variant="outline" className="flex-1 border-zinc-600 text-neutral-300 hover:bg-zinc-700 h-10">Stay</Button>
+                  <Button onClick={handleEndGame} className="flex-1 text-zinc-900 h-10" style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})` }}>Go to Lobby</Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
       {/* Restart confirmation */}
       <AnimatePresence>
         {showRestartConfirm && (
-          <WinOrExpirePopup
-            title="Get a New Board"
-            message="This will clear your progress and start a new board."
-            onYes={() => { handleRestart(); setShowRestartConfirm(false); }}
-            onNo={() => setShowRestartConfirm(false)}
-            borderColor="border-zinc-600"
-          />
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 backdrop-blur-sm z-50" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }} />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center px-4">
+              <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 25 }} className="w-full max-w-xs bg-zinc-800 border-2 border-zinc-600 rounded-lg p-6 text-center">
+                <h3 className="text-neutral-200 uppercase tracking-wider mb-3">New Board</h3>
+                <p className="text-neutral-400 mb-6">This will clear your progress and start a new board.</p>
+                <div className="flex gap-3">
+                  <Button onClick={() => setShowRestartConfirm(false)} variant="outline" className="flex-1 border-zinc-600 text-neutral-300 hover:bg-zinc-700 h-10">Cancel</Button>
+                  <Button onClick={() => { handleRestart(); setShowRestartConfirm(false); }} className="flex-1 text-zinc-900 h-10" style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})` }}>Yes</Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
-      {/* Solo blackout win popup */}
+      {/* Multiplayer win popup */}
+      <AnimatePresence>
+        {showWinPopup && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 backdrop-blur-sm z-50" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }} />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center px-4">
+              <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 25 }} className="w-full max-w-xs bg-zinc-800 border-2 border-green-500 rounded-lg p-6 text-center">
+                <Trophy className="w-10 h-10 text-green-500 mx-auto mb-3" />
+                <h3 className="text-green-500 uppercase tracking-wider mb-2">
+                  {isBlackoutMode ? 'BLACKOUT!' : 'BINGO!'}
+                </h3>
+                <p className="text-neutral-400 mb-6">
+                  {isBlackoutMode ? 'You marked every square!' : 'You got five in a row!'}
+                </p>
+                {imHost ? (
+                  <div className="flex gap-3">
+                    <Button onClick={() => setShowWinPopup(false)} variant="outline" className="flex-1 border-zinc-600 text-neutral-300 hover:bg-zinc-700 h-10">Keep Watching</Button>
+                    <Button onClick={handleEndGame} className="flex-1 text-zinc-900 h-10" style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})` }}>End Game</Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-3">
+                    {guestCanNewBoard && (
+                      <Button onClick={() => { setShowWinPopup(false); handleRestart(); }} variant="outline" className="flex-1 border-zinc-600 text-neutral-300 hover:bg-zinc-700 h-10">New Board</Button>
+                    )}
+                    <Button onClick={handleEndGame} className={`text-zinc-900 h-10 ${guestCanNewBoard ? 'flex-1' : 'w-full'}`} style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})` }}>Go to Lobby</Button>
+                  </div>
+                )}
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Host ended popup (guest only) */}
+      <AnimatePresence>
+        {showHostEndedPopup && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 backdrop-blur-sm z-50" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }} />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center px-4">
+              <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 25 }} className="w-full max-w-xs bg-zinc-800 border-2 border-zinc-600 rounded-lg p-6 text-center">
+                <h3 className="text-neutral-200 uppercase tracking-wider mb-3">Host Has Left</h3>
+                <p className="text-neutral-400 mb-1">The host ended the game.</p>
+                {sessionTimeLeft && (
+                  <p className="text-neutral-500 mb-5" style={{ fontSize: '13px' }}>Your board is still active for {sessionTimeLeft}.</p>
+                )}
+                {!sessionTimeLeft && <div className="mb-5" />}
+                <div className="flex gap-3">
+                  <Button onClick={() => setShowHostEndedPopup(false)} variant="outline" className="flex-1 border-zinc-600 text-neutral-300 hover:bg-zinc-700 h-10">Keep Playing</Button>
+                  <Button onClick={onGameEnd} className="flex-1 text-zinc-900 h-10" style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})` }}>Go to Lobby</Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Solo BLACKOUT! win banner — inverted BINGO style */}
       <AnimatePresence>
         {showBlackoutWin && (
-          <WinOrExpirePopup
-            title="BLACKOUT!"
-            message="You marked every square. Get a new board?"
-            onYes={() => { setShowBlackoutWin(false); handleRestart(); }}
-            onNo={() => setShowBlackoutWin(false)}
-            borderColor="border-green-500"
-            icon={<Trophy className="w-10 h-10 text-green-500" />}
-          />
+          <motion.div
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            exit={{ scale: 0, rotate: 180 }}
+            transition={{ type: 'spring', duration: 0.6 }}
+            className="fixed z-50"
+            style={{ top: '22%', left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '360px', padding: '0 16px' }}
+          >
+            <div className="bg-zinc-950 text-green-500 px-6 py-4 rounded shadow-2xl border-2 border-green-500 text-center">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <Trophy className="w-10 h-10 text-green-500" />
+                <div>
+                  <h2 className="mb-0.5 uppercase tracking-wider" style={{ color: '#17BB34' }}>BLACKOUT!</h2>
+                  <p style={{ color: '#4ade80' }}>You got all the squares!</p>
+                </div>
+                <Trophy className="w-10 h-10 text-green-500" />
+              </div>
+              <div className="flex gap-3 mt-1">
+                <Button
+                  onClick={() => { setShowBlackoutWin(false); handleRestart(); }}
+                  variant="outline"
+                  className="flex-1 h-10"
+                  style={{ borderColor: '#17BB34', color: '#17BB34' }}
+                >
+                  New Board
+                </Button>
+                <Button
+                  onClick={() => { setShowBlackoutWin(false); onGameEnd(); }}
+                  className="flex-1 text-zinc-900 h-10"
+                  style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})` }}
+                >
+                  Go to Lobby
+                </Button>
+              </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Solo blackout choice popup — sits behind the bingo banner (z-40 vs z-50) */}
+      {/* Solo blackout choice popup — sits behind BINGO banner (z-40) */}
       <AnimatePresence>
         {showBlackoutChoice && !showBingoMessage && (
           <motion.div
@@ -585,8 +636,8 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: 'spring', damping: 25 }}
-            className="fixed top-1/4 left-1/2 -translate-x-1/2 z-40 w-full px-4"
-            style={{ maxWidth: '320px' }}
+            className="fixed z-40"
+            style={{ top: '25%', left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '320px', padding: '0 16px' }}
           >
             <div className="bg-zinc-800 border-2 border-green-500 rounded-lg p-5 text-center shadow-2xl">
               <p className="text-neutral-300 mb-4" style={{ fontSize: '15px' }}>Keep going?</p>
@@ -622,7 +673,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
         )}
       </AnimatePresence>
 
-      {/* Solo bingo banner */}
+      {/* Solo BINGO! banner */}
       <AnimatePresence>
         {showBingoMessage && (
           <motion.div
@@ -630,7 +681,8 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
             animate={{ scale: 1, rotate: 0 }}
             exit={{ scale: 0, rotate: 180 }}
             transition={{ type: 'spring', duration: 0.6 }}
-            className="fixed top-1/4 left-1/2 -translate-x-1/2 z-50"
+            className="fixed z-50"
+            style={{ top: '25%', left: '50%', transform: 'translateX(-50%)' }}
           >
             <div className="bg-gradient-to-r from-green-500 to-green-600 text-zinc-900 px-6 py-4 rounded shadow-2xl flex items-center gap-3 border-2 border-zinc-800">
               <Trophy className="w-10 h-10" />
@@ -651,7 +703,6 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
         sessionInfo={sessionInfo}
         username={username}
         hasBingo={hasBingo}
-        showMultiplayerWin={showMultiplayerWin}
         copied={copied}
         useSharedTerms={useSharedTerms}
         termsConfirmed={termsConfirmed}
@@ -659,8 +710,11 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
         onConfirmTerms={handleConfirmTerms}
         onShuffleInfo={() => setShowShuffleInfo(true)}
         onShareInfo={() => setShowShareInfo(true)}
-        onBackToSports={handleExitToSports}
-        onGameEnd={handleExitGame}
+        onBackToSports={() => {
+          logEvent({ eventType: 'game_exited', sport, isMultiplayer: !!sessionInfo, hadBingo: hasBingo, userId, sessionId: sessionInfo?.sessionId, playerId: sessionInfo?.playerId }, isDev ?? false);
+          onBackToSports();
+        }}
+        onGameEnd={handleEndGame}
         onShowBackInfo={() => setShowBackInfo(true)}
         onShare={handleShare}
         onRestart={() => {
@@ -669,7 +723,6 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
         }}
       />
 
-      {/* Grid + leaderboard */}
       <div className="w-full max-w-md mx-auto">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -685,10 +738,10 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
               isFreeSpace={index === 12}
               onClick={() => {
                 if (index === 12) return;
-                if (doubleClickEnabled && !markedSquares.has(index)) handleConfirmMark(index);
+                if (!markedSquares.has(index)) handleConfirmMark(index);
                 setExpandedSquare(index);
               }}
-              onDoubleClick={doubleClickEnabled && index !== 12 ? () => {
+              onDoubleClick={index !== 12 ? () => {
                 if (markedSquares.has(index)) handleConfirmUnmark(index);
                 setExpandedSquare(index);
               } : undefined}
@@ -715,7 +768,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
       <BBExpandedSquareSheet
         item={expandedItem}
         isMarked={expandedSquare !== null && markedSquares.has(expandedSquare)}
-        doubleClickMode={doubleClickEnabled}
+        doubleClickMode={true}
         onClose={() => setExpandedSquare(null)}
         onMark={() => expandedSquare !== null && handleConfirmMark(expandedSquare)}
         onUnmark={() => expandedSquare !== null && handleConfirmUnmark(expandedSquare)}
@@ -725,19 +778,8 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
       <AnimatePresence>
         {showBlackoutInfo && (
           <>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowBlackoutInfo(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
-            />
-            <motion.div
-              initial={{ y: '100%', opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: '100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 25 }}
-              className="fixed inset-x-0 bottom-0 z-50 bg-zinc-800 rounded-t-lg p-5"
-              style={{ borderTop: `4px solid ${GREEN}` }}
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowBlackoutInfo(false)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" />
+            <motion.div initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '100%', opacity: 0 }} transition={{ type: 'spring', damping: 25 }} className="fixed inset-x-0 bottom-0 z-50 bg-zinc-800 rounded-t-lg p-5" style={{ borderTop: `4px solid ${GREEN}` }}>
               <div className="max-w-md mx-auto text-center">
                 <h3 className="text-neutral-200 uppercase tracking-wide mb-3">Blackout Bingo</h3>
                 <p className="text-neutral-400 mb-6">Mark every square on your board to win. Your progress so far is saved.</p>
@@ -748,26 +790,15 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
         )}
       </AnimatePresence>
 
-      {/* Shuffle info sheet (host, shared terms) */}
+      {/* Shuffle info sheet */}
       <AnimatePresence>
         {showShuffleInfo && (
           <>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowShuffleInfo(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
-            />
-            <motion.div
-              initial={{ y: '100%', opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: '100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 25 }}
-              className="fixed inset-x-0 bottom-0 z-50 bg-zinc-800 rounded-t-lg p-5"
-              style={{ borderTop: `4px solid ${GREEN}` }}
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowShuffleInfo(false)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" />
+            <motion.div initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '100%', opacity: 0 }} transition={{ type: 'spring', damping: 25 }} className="fixed inset-x-0 bottom-0 z-50 bg-zinc-800 rounded-t-lg p-5" style={{ borderTop: `4px solid ${GREEN}` }}>
               <div className="max-w-md mx-auto text-center">
                 <h3 className="text-neutral-200 uppercase tracking-wide mb-3">Board Shuffles</h3>
-                <p className="text-neutral-400 mb-6">You have {shufflesRemaining} shuffle{shufflesRemaining !== 1 ? 's' : ''} remaining. Once you click Confirm Terms, all guests will receive the same 24 terms on their boards in a different arrangement.</p>
+                <p className="text-neutral-400 mb-6">You have {shufflesRemaining} shuffle{shufflesRemaining !== 1 ? 's' : ''} remaining. Once you confirm terms, all guests receive the same 24 terms in a different arrangement.</p>
                 <Button onClick={() => setShowShuffleInfo(false)} className="w-full text-zinc-900 h-10" style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})` }}>Got it</Button>
               </div>
             </motion.div>
@@ -775,23 +806,12 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
         )}
       </AnimatePresence>
 
-      {/* Share locked info sheet (host, shared terms, not yet confirmed) */}
+      {/* Share locked info sheet */}
       <AnimatePresence>
         {showShareInfo && (
           <>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowShareInfo(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
-            />
-            <motion.div
-              initial={{ y: '100%', opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: '100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 25 }}
-              className="fixed inset-x-0 bottom-0 z-50 bg-zinc-800 rounded-t-lg p-5"
-              style={{ borderTop: `4px solid ${GREEN}` }}
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowShareInfo(false)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40" />
+            <motion.div initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '100%', opacity: 0 }} transition={{ type: 'spring', damping: 25 }} className="fixed inset-x-0 bottom-0 z-50 bg-zinc-800 rounded-t-lg p-5" style={{ borderTop: `4px solid ${GREEN}` }}>
               <div className="max-w-md mx-auto text-center">
                 <h3 className="text-neutral-200 uppercase tracking-wide mb-3">Share Locked</h3>
                 <p className="text-neutral-400 mb-6">Confirm your board terms before sharing with guests. Click "Confirm Terms" when you're happy with your board.</p>

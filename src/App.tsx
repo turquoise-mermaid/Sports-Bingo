@@ -296,7 +296,20 @@ export default function App() {
           {view === 'login' && (
             <LoginPage
               defaultMode={loginMode}
-              onSuccess={() => { setFirstUseWon(false); setView('session-lobby'); }}
+              onSuccess={() => {
+                const pending = localStorage.getItem('sportsbingo_pending_board');
+                if (pending) {
+                  try {
+                    const { sport: pendingSport } = JSON.parse(pending);
+                    setSelectedSport(pendingSport as Sport);
+                    setSessionInfo(null);
+                    setView('game');
+                    return;
+                  } catch { /* fall through */ }
+                }
+                setFirstUseWon(false);
+                setView('session-lobby');
+              }}
               onContinueAsGuest={() => { setFirstUseWon(false); setView('session-lobby'); }}
               onBack={() => { firstUseWon ? setView('game') : handleBackToLobby(); }}
             />

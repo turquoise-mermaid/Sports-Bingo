@@ -18,7 +18,6 @@ interface BBBoardHeaderProps {
   sessionInfo: SessionInfo | null;
   username?: string;
   hasBingo: boolean;
-  showMultiplayerWin: boolean;
   copied: boolean;
   // Shared terms
   useSharedTerms?: boolean;
@@ -42,7 +41,6 @@ export function BBBoardHeader({
   sessionInfo,
   username,
   hasBingo,
-  showMultiplayerWin,
   copied,
   useSharedTerms,
   termsConfirmed,
@@ -126,16 +124,6 @@ export function BBBoardHeader({
             </Button>
           )}
 
-          {hasBingo && isMultiplayer && !showMultiplayerWin && (
-            <Button
-              onClick={onGameEnd}
-              variant="ghost"
-              className="text-green-500 hover:bg-zinc-800 hover:text-green-400 h-7 px-3"
-              style={{ fontSize: '14px' }}
-            >
-              Start New Game
-            </Button>
-          )}
         </div>
 
         {/* Center: sport title */}
@@ -170,9 +158,9 @@ export function BBBoardHeader({
                 </button>
               )}
               <Button
-                onClick={shareBlocked ? undefined : onShare}
+                onClick={shareBlocked ? onShareInfo : onShare}
                 variant="ghost"
-                className={`h-8 px-3 ${shareBlocked ? 'text-zinc-600 cursor-default' : 'text-neutral-300 hover:text-green-500 hover:bg-zinc-800'}`}
+                className={`h-8 px-3 ${shareBlocked ? 'text-zinc-600' : 'text-neutral-300 hover:text-green-500 hover:bg-zinc-800'}`}
               >
                 <Share2 className="w-4 h-4 mr-2" />
                 <span style={{ fontSize: '14px' }}>{copied ? 'Copied!' : 'Share'}</span>

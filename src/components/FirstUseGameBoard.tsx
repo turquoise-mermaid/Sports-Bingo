@@ -75,6 +75,7 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
   const [markedSquares, setMarkedSquares] = useState<Set<number>>(new Set([12]));
   const [expandedSquare, setExpandedSquare] = useState<number | null>(null);
   const doubleClickEnabled = true;
+  const [boardOrder, setBoardOrder] = useState<number[]>([]);
   const [hasBingo, setHasBingo] = useState(initialHasBingo ?? false);
   const [showBanner, setShowBanner] = useState(false);
   const [showBlackoutChoice, setShowBlackoutChoice] = useState(false);
@@ -86,6 +87,7 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
   useEffect(() => {
     const items = getBingoItems(sport);
     const order = generateBoardOrder(items);
+    setBoardOrder(order);
     setBingoItems(boardFromOrder(items, order));
     if (!initialHasBingo && !gameStartedLogged.current) {
       gameStartedLogged.current = true;
@@ -279,7 +281,16 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
               <div className="flex gap-3">
                 <div className="flex items-center gap-1 flex-1">
                   <Button
-                    onClick={() => { setShowBlackoutChoice(false); setShowBlackoutUpsell(true); }}
+                    onClick={() => {
+                      setShowBlackoutChoice(false);
+                      setShowBlackoutUpsell(true);
+                      localStorage.setItem('sportsbingo_pending_board', JSON.stringify({
+                        boardOrder,
+                        markedSquares: [...markedSquares],
+                        sport,
+                        blackoutMode: true,
+                      }));
+                    }}
                     className="flex-1 text-zinc-900 h-10"
                     style={{ background: 'linear-gradient(to right, #17BB34, #14a12d)', fontSize: '13px' }}
                   >
