@@ -26,6 +26,7 @@ interface BBBoardHeaderProps {
   onConfirmTerms?: () => void;
   onShuffleInfo?: () => void;
   onShareInfo?: () => void;
+  hideNewBoard?: boolean;
   // Handlers
   onBackToSports: () => void;
   onGameEnd: () => void;
@@ -48,6 +49,7 @@ export function BBBoardHeader({
   onConfirmTerms,
   onShuffleInfo,
   onShareInfo,
+  hideNewBoard,
   onBackToSports,
   onGameEnd,
   onShowBackInfo,
@@ -173,7 +175,7 @@ export function BBBoardHeader({
             )}
           </div>
         )}
-        {!imHost && isMultiplayer && (
+        {!imHost && isMultiplayer && !hideNewBoard && (
           <Button
             onClick={onRestart}
             variant="ghost"

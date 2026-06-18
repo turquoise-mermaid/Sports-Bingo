@@ -530,40 +530,54 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
         )}
       </AnimatePresence>
 
-      {/* Multiplayer win popup */}
+      {/* Multiplayer win banner — same style as solo BINGO/BLACKOUT banners, no backdrop */}
       <AnimatePresence>
         {showWinPopup && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 backdrop-blur-sm z-50" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }} />
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center px-4">
-              <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 25 }} className="w-full max-w-xs bg-zinc-800 border-2 border-green-500 rounded-lg p-6 text-center">
-                <Trophy className="w-10 h-10 text-green-500 mx-auto mb-3" />
-                <h3 className="text-green-500 uppercase tracking-wider mb-2">
-                  {isBlackoutMode ? 'BLACKOUT!' : 'BINGO!'}
-                </h3>
-                <p className="text-neutral-400 mb-6">
-                  {isBlackoutMode ? 'You marked every square!' : 'You got five in a row!'}
-                </p>
-                {imHost ? (
-                  <div className="flex gap-3">
-                    <Button onClick={() => setShowWinPopup(false)} variant="outline" className="flex-1 border-zinc-600 text-neutral-300 hover:bg-zinc-700 h-10">Keep Watching</Button>
-                    <Button onClick={handleEndGame} className="flex-1 text-zinc-900 h-10" style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})` }}>End Game</Button>
+          <div className="fixed inset-x-0 z-50 flex justify-center pointer-events-none" style={{ top: '22%' }}>
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              exit={{ scale: 0, rotate: 180 }}
+              transition={{ type: 'spring', duration: 0.6 }}
+              className="pointer-events-auto"
+            >
+              {isBlackoutMode ? (
+                <div className="bg-zinc-950 px-6 py-4 rounded shadow-2xl border-2 border-green-500">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Trophy className="w-10 h-10 text-green-500" />
+                    <div>
+                      <h2 className="mb-0.5 uppercase tracking-wider" style={{ color: GREEN }}>BLACKOUT!</h2>
+                      <p style={{ color: '#4ade80' }}>You marked every square!</p>
+                    </div>
+                    <Trophy className="w-10 h-10 text-green-500" />
                   </div>
-                ) : (
-                  <div className="flex gap-3">
-                    {guestCanNewBoard && (
-                      <Button onClick={() => { setShowWinPopup(false); handleRestart(); }} variant="outline" className="flex-1 border-zinc-600 text-neutral-300 hover:bg-zinc-700 h-10">New Board</Button>
-                    )}
-                    <Button onClick={handleEndGame} className={`text-zinc-900 h-10 ${guestCanNewBoard ? 'flex-1' : 'w-full'}`} style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})` }}>Go to Lobby</Button>
+                  <div className="flex gap-2">
+                    <Button onClick={() => setShowWinPopup(false)} variant="outline" className="flex-1 h-9" style={{ borderColor: GREEN, color: GREEN, fontSize: '13px' }}>Stay in Game</Button>
+                    <Button onClick={handleEndGame} className="flex-1 h-9 text-zinc-900" style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})`, fontSize: '13px' }}>Go to Lobby</Button>
                   </div>
-                )}
-              </motion.div>
+                </div>
+              ) : (
+                <div className="bg-gradient-to-r from-green-500 to-green-600 text-zinc-900 px-6 py-4 rounded shadow-2xl border-2 border-zinc-800">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Trophy className="w-10 h-10" />
+                    <div>
+                      <h2 className="mb-0.5 uppercase tracking-wider">BINGO!</h2>
+                      <p>You got five in a row!</p>
+                    </div>
+                    <Trophy className="w-10 h-10" />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={() => setShowWinPopup(false)} variant="outline" className="flex-1 h-9 border-zinc-800 text-zinc-900 hover:bg-green-600" style={{ fontSize: '13px' }}>Stay in Game</Button>
+                    <Button onClick={handleEndGame} className="flex-1 h-9 bg-zinc-900 text-green-400 hover:bg-zinc-800" style={{ fontSize: '13px' }}>Go to Lobby</Button>
+                  </div>
+                </div>
+              )}
             </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
 
-      {/* Host ended popup (guest only) */}
+      {/* Host ended popup (guest only) — centered modal, needs user action */}
       <AnimatePresence>
         {showHostEndedPopup && (
           <>
@@ -586,113 +600,103 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
         )}
       </AnimatePresence>
 
-      {/* Solo BLACKOUT! win banner — inverted BINGO style */}
+      {/* Solo BLACKOUT! win banner */}
       <AnimatePresence>
         {showBlackoutWin && (
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            exit={{ scale: 0, rotate: 180 }}
-            transition={{ type: 'spring', duration: 0.6 }}
-            className="fixed z-50"
-            style={{ top: '22%', left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '360px', padding: '0 16px' }}
-          >
-            <div className="bg-zinc-950 text-green-500 px-6 py-4 rounded shadow-2xl border-2 border-green-500 text-center">
-              <div className="flex items-center justify-center gap-3 mb-3">
-                <Trophy className="w-10 h-10 text-green-500" />
-                <div>
-                  <h2 className="mb-0.5 uppercase tracking-wider" style={{ color: '#17BB34' }}>BLACKOUT!</h2>
-                  <p style={{ color: '#4ade80' }}>You got all the squares!</p>
+          <div className="fixed inset-x-0 z-50 flex justify-center pointer-events-none" style={{ top: '22%' }}>
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              exit={{ scale: 0, rotate: 180 }}
+              transition={{ type: 'spring', duration: 0.6 }}
+              className="pointer-events-auto"
+            >
+              <div className="bg-zinc-950 px-6 py-4 rounded shadow-2xl border-2 border-green-500">
+                <div className="flex items-center gap-3 mb-3">
+                  <Trophy className="w-10 h-10 text-green-500" />
+                  <div>
+                    <h2 className="mb-0.5 uppercase tracking-wider" style={{ color: GREEN }}>BLACKOUT!</h2>
+                    <p style={{ color: '#4ade80' }}>You got all the squares!</p>
+                  </div>
+                  <Trophy className="w-10 h-10 text-green-500" />
                 </div>
-                <Trophy className="w-10 h-10 text-green-500" />
+                <div className="flex gap-3 mt-1">
+                  <Button onClick={() => { setShowBlackoutWin(false); handleRestart(); }} variant="outline" className="flex-1 h-10" style={{ borderColor: GREEN, color: GREEN }}>New Board</Button>
+                  <Button onClick={() => { setShowBlackoutWin(false); onGameEnd(); }} className="flex-1 text-zinc-900 h-10" style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})` }}>Go to Lobby</Button>
+                </div>
               </div>
-              <div className="flex gap-3 mt-1">
-                <Button
-                  onClick={() => { setShowBlackoutWin(false); handleRestart(); }}
-                  variant="outline"
-                  className="flex-1 h-10"
-                  style={{ borderColor: '#17BB34', color: '#17BB34' }}
-                >
-                  New Board
-                </Button>
-                <Button
-                  onClick={() => { setShowBlackoutWin(false); onGameEnd(); }}
-                  className="flex-1 text-zinc-900 h-10"
-                  style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})` }}
-                >
-                  Go to Lobby
-                </Button>
-              </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
-      {/* Solo blackout choice popup — sits behind BINGO banner (z-40) */}
+      {/* Solo blackout choice popup — behind BINGO banner (z-40) */}
       <AnimatePresence>
         {showBlackoutChoice && !showBingoMessage && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ type: 'spring', damping: 25 }}
-            className="fixed z-40"
-            style={{ top: '25%', left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '320px', padding: '0 16px' }}
-          >
-            <div className="bg-zinc-800 border-2 border-green-500 rounded-lg p-5 text-center shadow-2xl">
-              <p className="text-neutral-300 mb-4" style={{ fontSize: '15px' }}>Keep going?</p>
-              <div className="flex gap-3">
-                <div className="flex items-center gap-1 flex-1">
+          <div className="fixed inset-x-0 z-40 flex justify-center px-4 pointer-events-none" style={{ top: '25%' }}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ type: 'spring', damping: 25 }}
+              className="pointer-events-auto"
+            >
+              <div className="bg-zinc-800 border-2 border-green-500 rounded-lg p-5 text-center shadow-2xl">
+                <p className="text-neutral-300 mb-4" style={{ fontSize: '15px' }}>Keep going?</p>
+                <div className="flex gap-3">
+                  <div className="flex items-center gap-1">
+                    <Button
+                      onClick={() => { setBlackoutMode(true); setShowBlackoutChoice(false); }}
+                      className="text-zinc-900 h-10"
+                      style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})`, fontSize: '13px' }}
+                    >
+                      Keep Going
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => setShowBlackoutInfo(true)}
+                      className="text-neutral-500 hover:text-green-500 transition-colors flex-shrink-0 ml-1"
+                      aria-label="Blackout Bingo info"
+                    >
+                      <Info className="w-4 h-4" />
+                    </button>
+                  </div>
                   <Button
-                    onClick={() => { setBlackoutMode(true); setShowBlackoutChoice(false); }}
-                    className="flex-1 text-zinc-900 h-10"
-                    style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})`, fontSize: '13px' }}
+                    onClick={() => { setShowBlackoutChoice(false); setShowRestartConfirm(true); }}
+                    variant="outline"
+                    className="border-zinc-600 text-neutral-300 hover:bg-zinc-700 h-10"
+                    style={{ fontSize: '13px' }}
                   >
-                    Keep Going
+                    New Board
                   </Button>
-                  <button
-                    type="button"
-                    onClick={() => setShowBlackoutInfo(true)}
-                    className="text-neutral-500 hover:text-green-500 transition-colors flex-shrink-0"
-                    aria-label="Blackout Bingo info"
-                  >
-                    <Info className="w-4 h-4" />
-                  </button>
                 </div>
-                <Button
-                  onClick={() => { setShowBlackoutChoice(false); setShowRestartConfirm(true); }}
-                  variant="outline"
-                  className="flex-1 border-zinc-600 text-neutral-300 hover:bg-zinc-700 h-10"
-                  style={{ fontSize: '13px' }}
-                >
-                  New Board
-                </Button>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
       {/* Solo BINGO! banner */}
       <AnimatePresence>
         {showBingoMessage && (
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            exit={{ scale: 0, rotate: 180 }}
-            transition={{ type: 'spring', duration: 0.6 }}
-            className="fixed z-50"
-            style={{ top: '25%', left: '50%', transform: 'translateX(-50%)' }}
-          >
-            <div className="bg-gradient-to-r from-green-500 to-green-600 text-zinc-900 px-6 py-4 rounded shadow-2xl flex items-center gap-3 border-2 border-zinc-800">
-              <Trophy className="w-10 h-10" />
-              <div>
-                <h2 className="mb-0.5 uppercase tracking-wider">BINGO!</h2>
-                <p>You got five in a row!</p>
+          <div className="fixed inset-x-0 z-50 flex justify-center pointer-events-none" style={{ top: '25%' }}>
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              exit={{ scale: 0, rotate: 180 }}
+              transition={{ type: 'spring', duration: 0.6 }}
+              className="pointer-events-auto"
+            >
+              <div className="bg-gradient-to-r from-green-500 to-green-600 text-zinc-900 px-6 py-4 rounded shadow-2xl flex items-center gap-3 border-2 border-zinc-800">
+                <Trophy className="w-10 h-10" />
+                <div>
+                  <h2 className="mb-0.5 uppercase tracking-wider">BINGO!</h2>
+                  <p>You got five in a row!</p>
+                </div>
+                <Trophy className="w-10 h-10" />
               </div>
-              <Trophy className="w-10 h-10" />
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
@@ -708,6 +712,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
         termsConfirmed={termsConfirmed}
         shufflesRemaining={shufflesRemaining}
         onConfirmTerms={handleConfirmTerms}
+        hideNewBoard={!guestCanNewBoard}
         onShuffleInfo={() => setShowShuffleInfo(true)}
         onShareInfo={() => setShowShareInfo(true)}
         onBackToSports={() => {

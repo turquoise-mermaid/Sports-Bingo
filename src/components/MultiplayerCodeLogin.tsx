@@ -50,6 +50,8 @@ export function MultiplayerCodeLogin({
           initials: player.initials,
           isHost: false,
           joinCode: code,
+          gameMode: (session.game_mode as 'bingo' | 'blackout') ?? 'bingo',
+          useSharedTerms: session.use_shared_terms ?? false,
         },
         session.sport as Sport
       );
@@ -78,6 +80,8 @@ export function MultiplayerCodeLogin({
           initials: player.initials,
           isHost: true,
           joinCode: session.join_code,
+          gameMode: (session.game_mode as 'bingo' | 'blackout') ?? 'bingo',
+          useSharedTerms: session.use_shared_terms ?? false,
         },
         session.sport as Sport
       );
