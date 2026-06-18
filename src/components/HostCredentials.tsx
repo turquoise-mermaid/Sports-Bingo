@@ -28,8 +28,8 @@ type InfoType = 'blackout' | 'sharedTerms' | null;
 
 const INFO_TEXT: Record<NonNullable<InfoType>, { title: string; body: string }> = {
   blackout: {
-    title: 'Blackout Bingo',
-    body: 'Instead of five in a row, the first player to mark every square on their board wins.',
+    title: 'Game Mode',
+    body: 'Choose the win condition for your game. All invited players will play by this rule — First to Bingo means five in a row, First to Blackout means marking every square on the board.',
   },
   sharedTerms: {
     title: 'Shared Terms',
@@ -150,7 +150,7 @@ export function HostCredentials({ onBack, onContinue, defaultUsername, isAnonymo
                 First to Blackout
               </button>
             </div>
-            <p className="text-neutral-500 mt-2" style={{ fontSize: '12px' }}>
+            <p className="text-neutral-200 mt-2" style={{ fontSize: '14px' }}>
               {gameMode === 'bingo'
                 ? 'First player to mark five squares in a row wins.'
                 : 'First player to mark every square on their board wins.'}
