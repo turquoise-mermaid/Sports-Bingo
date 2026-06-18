@@ -569,7 +569,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
                 </div>
                 <div className="flex gap-2">
                   <Button onClick={() => setShowWinPopup(false)} className="flex-1 h-9 bg-zinc-900 hover:bg-zinc-800 text-neutral-200" style={{ fontSize: '13px' }}>Stay here</Button>
-                  <Button onClick={handleEndGame} className="flex-1 h-9 bg-zinc-900 text-green-400 hover:bg-zinc-800" style={{ fontSize: '13px' }}>Go to Lobby</Button>
+                  <Button onClick={handleEndGame} className="flex-1 h-9 bg-zinc-900 text-neutral-200 hover:bg-zinc-800" style={{ fontSize: '13px' }}>Go to Lobby</Button>
                 </div>
               </div>
             )}
