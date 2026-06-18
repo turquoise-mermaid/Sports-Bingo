@@ -544,17 +544,17 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
           >
             {isBlackoutMode ? (
               <div className="bg-zinc-950 px-6 py-4 rounded shadow-2xl border-2 border-green-500">
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center justify-center gap-3 mb-3">
                   <Trophy className="w-10 h-10 text-green-500" />
-                  <div>
+                  <div className="text-center">
                     <h2 className="mb-0.5 uppercase tracking-wider" style={{ color: GREEN }}>BLACKOUT!</h2>
-                    <p style={{ color: '#4ade80' }}>You marked every square!</p>
+                    <p className="text-neutral-200">You marked every square!</p>
                   </div>
                   <Trophy className="w-10 h-10 text-green-500" />
                 </div>
                 <div className="flex gap-2">
                   <Button onClick={() => setShowWinPopup(false)} variant="outline" className="flex-1 h-9" style={{ borderColor: GREEN, color: GREEN, fontSize: '13px' }}>Stay here</Button>
-                  <Button onClick={handleEndGame} className="flex-1 h-9 text-zinc-900" style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})`, fontSize: '13px' }}>Go to Lobby</Button>
+                  <Button onClick={handleEndGame} variant="outline" className="flex-1 h-9" style={{ borderColor: GREEN, color: GREEN, fontSize: '13px' }}>Go to Lobby</Button>
                 </div>
               </div>
             ) : (
