@@ -553,8 +553,8 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
                   <Trophy className="w-10 h-10 text-green-500" />
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={() => setShowWinPopup(false)} variant="outline" className="flex-1 h-9" style={{ borderColor: GREEN, color: GREEN, fontSize: '13px' }}>Stay here</Button>
-                  <Button onClick={handleEndGame} variant="outline" className="flex-1 h-9" style={{ borderColor: GREEN, color: GREEN, fontSize: '13px' }}>Go to Lobby</Button>
+                  <Button onClick={() => setShowWinPopup(false)} variant="outline" className="flex-1 h-9 hover:bg-transparent hover:text-zinc-900" style={{ borderColor: GREEN, color: GREEN, fontSize: '13px' }}>Stay here</Button>
+                  <Button onClick={handleEndGame} variant="outline" className="flex-1 h-9 hover:bg-transparent hover:text-zinc-900" style={{ borderColor: GREEN, color: GREEN, fontSize: '13px' }}>Go to Lobby</Button>
                 </div>
               </div>
             ) : (
