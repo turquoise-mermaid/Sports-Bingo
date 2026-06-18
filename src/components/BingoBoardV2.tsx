@@ -533,14 +533,15 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
       {/* Multiplayer win banner — same style as solo BINGO/BLACKOUT banners, no backdrop */}
       <AnimatePresence>
         {showWinPopup && (
-          <div className="fixed inset-x-0 z-50 flex justify-center pointer-events-none" style={{ top: '22%' }}>
-            <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              exit={{ scale: 0, rotate: 180 }}
-              transition={{ type: 'spring', duration: 0.6 }}
-              className="pointer-events-auto"
-            >
+          <motion.div
+            className="fixed inset-x-0 z-50 flex justify-center pointer-events-none"
+            style={{ top: '22%' }}
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            exit={{ scale: 0, rotate: 180 }}
+            transition={{ type: 'spring', duration: 0.6 }}
+          >
+            <div className="pointer-events-auto">
               {isBlackoutMode ? (
                 <div className="bg-zinc-950 px-6 py-4 rounded shadow-2xl border-2 border-green-500">
                   <div className="flex items-center gap-3 mb-3">
@@ -552,7 +553,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
                     <Trophy className="w-10 h-10 text-green-500" />
                   </div>
                   <div className="flex gap-2">
-                    <Button onClick={() => setShowWinPopup(false)} variant="outline" className="flex-1 h-9" style={{ borderColor: GREEN, color: GREEN, fontSize: '13px' }}>Stay in Game</Button>
+                    <Button onClick={() => setShowWinPopup(false)} variant="outline" className="flex-1 h-9" style={{ borderColor: GREEN, color: GREEN, fontSize: '13px' }}>Stay here</Button>
                     <Button onClick={handleEndGame} className="flex-1 h-9 text-zinc-900" style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})`, fontSize: '13px' }}>Go to Lobby</Button>
                   </div>
                 </div>
@@ -567,13 +568,13 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
                     <Trophy className="w-10 h-10" />
                   </div>
                   <div className="flex gap-2">
-                    <Button onClick={() => setShowWinPopup(false)} variant="outline" className="flex-1 h-9 border-zinc-800 text-zinc-900 hover:bg-green-600" style={{ fontSize: '13px' }}>Stay in Game</Button>
+                    <Button onClick={() => setShowWinPopup(false)} className="flex-1 h-9 bg-zinc-900 hover:bg-zinc-800 text-neutral-200" style={{ fontSize: '13px' }}>Stay here</Button>
                     <Button onClick={handleEndGame} className="flex-1 h-9 bg-zinc-900 text-green-400 hover:bg-zinc-800" style={{ fontSize: '13px' }}>Go to Lobby</Button>
                   </div>
                 </div>
               )}
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -603,14 +604,15 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
       {/* Solo BLACKOUT! win banner */}
       <AnimatePresence>
         {showBlackoutWin && (
-          <div className="fixed inset-x-0 z-50 flex justify-center pointer-events-none" style={{ top: '22%' }}>
-            <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              exit={{ scale: 0, rotate: 180 }}
-              transition={{ type: 'spring', duration: 0.6 }}
-              className="pointer-events-auto"
-            >
+          <motion.div
+            className="fixed inset-x-0 z-50 flex justify-center pointer-events-none"
+            style={{ top: '22%' }}
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            exit={{ scale: 0, rotate: 180 }}
+            transition={{ type: 'spring', duration: 0.6 }}
+          >
+            <div className="pointer-events-auto">
               <div className="bg-zinc-950 px-6 py-4 rounded shadow-2xl border-2 border-green-500">
                 <div className="flex items-center gap-3 mb-3">
                   <Trophy className="w-10 h-10 text-green-500" />
@@ -625,22 +627,23 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
                   <Button onClick={() => { setShowBlackoutWin(false); onGameEnd(); }} className="flex-1 text-zinc-900 h-10" style={{ background: `linear-gradient(to right, ${GREEN}, ${GREEN_DARK})` }}>Go to Lobby</Button>
                 </div>
               </div>
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
       {/* Solo blackout choice popup — behind BINGO banner (z-40) */}
       <AnimatePresence>
         {showBlackoutChoice && !showBingoMessage && (
-          <div className="fixed inset-x-0 z-40 flex justify-center px-4 pointer-events-none" style={{ top: '25%' }}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ type: 'spring', damping: 25 }}
-              className="pointer-events-auto"
-            >
+          <motion.div
+            className="fixed inset-x-0 z-40 flex justify-center px-4 pointer-events-none"
+            style={{ top: '25%' }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ type: 'spring', damping: 25 }}
+          >
+            <div className="pointer-events-auto">
               <div className="bg-zinc-800 border-2 border-green-500 rounded-lg p-5 text-center shadow-2xl">
                 <p className="text-neutral-300 mb-4" style={{ fontSize: '15px' }}>Keep going?</p>
                 <div className="flex gap-3">
@@ -671,22 +674,23 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
                   </Button>
                 </div>
               </div>
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
       {/* Solo BINGO! banner */}
       <AnimatePresence>
         {showBingoMessage && (
-          <div className="fixed inset-x-0 z-50 flex justify-center pointer-events-none" style={{ top: '25%' }}>
-            <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              exit={{ scale: 0, rotate: 180 }}
-              transition={{ type: 'spring', duration: 0.6 }}
-              className="pointer-events-auto"
-            >
+          <motion.div
+            className="fixed inset-x-0 z-50 flex justify-center pointer-events-none"
+            style={{ top: '25%' }}
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            exit={{ scale: 0, rotate: 180 }}
+            transition={{ type: 'spring', duration: 0.6 }}
+          >
+            <div className="pointer-events-auto">
               <div className="bg-gradient-to-r from-green-500 to-green-600 text-zinc-900 px-6 py-4 rounded shadow-2xl flex items-center gap-3 border-2 border-zinc-800">
                 <Trophy className="w-10 h-10" />
                 <div>
@@ -695,8 +699,8 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
                 </div>
                 <Trophy className="w-10 h-10" />
               </div>
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 

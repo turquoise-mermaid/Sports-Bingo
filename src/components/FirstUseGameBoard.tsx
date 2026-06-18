@@ -252,7 +252,7 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
             animate={{ scale: 1, rotate: 0 }}
             exit={{ scale: 0, rotate: 180 }}
             transition={{ type: 'spring', duration: 0.6 }}
-            style={{ position: 'fixed', top: '25%', left: '50%', transform: 'translateX(-50%)', zIndex: 50 }}
+            style={{ position: 'fixed', top: '25%', left: 0, right: 0, zIndex: 50, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}
           >
             <div className="bg-gradient-to-r from-green-500 to-green-600 text-zinc-900 px-6 py-4 rounded shadow-2xl flex items-center gap-3 border-2 border-zinc-800">
               <Trophy style={{ width: '2.5rem', height: '2.5rem' }} />
@@ -274,8 +274,9 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: 'spring', damping: 25 }}
-            style={{ position: 'fixed', top: '25%', left: '50%', transform: 'translateX(-50%)', zIndex: 40, width: '100%', maxWidth: '320px', padding: '0 16px' }}
+            style={{ position: 'fixed', top: '25%', left: 0, right: 0, zIndex: 40, display: 'flex', justifyContent: 'center', padding: '0 16px', pointerEvents: 'none' }}
           >
+          <div style={{ pointerEvents: 'auto', width: '100%', maxWidth: '320px' }}>
             <div className="bg-zinc-800 border-2 border-green-500 rounded-lg p-5 text-center shadow-2xl">
               <p className="text-neutral-300 mb-4" style={{ fontSize: '15px' }}>Keep going?</p>
               <div className="flex gap-3">
@@ -315,6 +316,7 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
                 </Button>
               </div>
             </div>
+          </div>
           </motion.div>
         )}
       </AnimatePresence>
