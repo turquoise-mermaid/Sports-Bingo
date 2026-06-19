@@ -38,6 +38,8 @@ export function GuestLogin({ user, defaultJoinCode, defaultUsername, onBack, onJ
           initials: playerName,
           isHost: false,
           joinCode: code,
+          gameMode: (session.game_mode as 'bingo' | 'blackout') ?? 'bingo',
+          useSharedTerms: session.use_shared_terms ?? false,
         },
         session.sport as Sport
       );

@@ -4,6 +4,7 @@ interface LeaderboardProps {
   players: PlayerRow[];
   myId: number;
   myMarkedSquares: Set<number>;
+  gameMode?: 'bingo' | 'blackout';
 }
 
 const MEDALS = ['🥇', '🥈', '🥉'];
@@ -48,13 +49,18 @@ function MiniGrid({ markedSquares }: { markedSquares: number[] }) {
   );
 }
 
-export function Leaderboard({ players, myId, myMarkedSquares }: LeaderboardProps) {
+export function Leaderboard({ players, myId, myMarkedSquares, gameMode = 'bingo' }: LeaderboardProps) {
+  const isBlackout = gameMode === 'blackout';
+
   const sorted = [...players]
     .map(p => ({
       ...p,
       squares: p.id === myId ? [...myMarkedSquares] : (p.marked_squares ?? []),
     }))
-    .map(p => ({ ...p, bingo: hasBingo(p.squares) }))
+    .map(p => ({
+      ...p,
+      won: isBlackout ? p.squares.length === 25 : hasBingo(p.squares),
+    }))
     .sort((a, b) => {
       const countDiff = b.squares.length - a.squares.length;
       if (countDiff !== 0) return countDiff;
@@ -71,7 +77,7 @@ export function Leaderboard({ players, myId, myMarkedSquares }: LeaderboardProps
           const isMe = player.id === myId;
           const rank = i + 1;
           const label = player.initials ?? `P${player.player_number}`;
-          const medal = player.bingo && rank <= 3 ? MEDALS[rank - 1] : null;
+          const medal = player.won && rank <= 3 ? MEDALS[rank - 1] : null;
           return (
             <div
               key={player.id}
@@ -79,11 +85,21 @@ export function Leaderboard({ players, myId, myMarkedSquares }: LeaderboardProps
               style={isMe ? { borderColor: 'rgba(23,187,52,0.4)' } : undefined}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', minWidth: 0 }}>
-                  {medal && <span style={{ fontSize: '13px', lineHeight: 1, flexShrink: 0 }}>{medal}</span>}
-                  <span className={`truncate ${isMe ? 'text-green-400' : 'text-neutral-400'}`} style={{ fontSize: '14px' }}>
-                    {label}
-                  </span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                    {medal && <span style={{ fontSize: '13px', lineHeight: 1, flexShrink: 0 }}>{medal}</span>}
+                    <span className={`truncate ${isMe ? 'text-green-400' : 'text-neutral-400'}`} style={{ fontSize: '14px' }}>
+                      {label}
+                    </span>
+                  </div>
+                  {isBlackout && (
+                    <span
+                      className={player.won ? 'text-green-400' : 'text-neutral-500'}
+                      style={{ fontSize: '11px' }}
+                    >
+                      {player.squares.length}/25
+                    </span>
+                  )}
                 </div>
                 <MiniGrid markedSquares={player.squares} />
               </div>

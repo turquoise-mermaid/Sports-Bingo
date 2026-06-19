@@ -16,7 +16,7 @@ import { SupportPage } from './components/SupportPage';
 import { HowToPlay } from './components/HowToPlay';
 import { DevNav } from './components/DevNav';
 import { useAuth } from './hooks/useAuth';
-import { createMultiplayerSession, loginAsHost, rejoinSession, joinSessionByCode } from './lib/sessions';
+import { createMultiplayerSession, loginAsHost, rejoinSession, joinSessionByCode, SessionRow } from './lib/sessions';
 import { supabase } from './lib/supabase';
 import { logEvent } from './lib/analytics';
 import { generateRandomName } from './lib/randomName';
@@ -47,6 +47,8 @@ export interface SessionInfo {
   initials?: string;
   isHost?: boolean;
   joinCode?: string;
+  gameMode?: 'bingo' | 'blackout';
+  useSharedTerms?: boolean;
 }
 
 const SESSION_KEY = 'sportsbingo_session';
@@ -120,12 +122,12 @@ export default function App() {
         if (stored.isHost) {
           const { session, player } = await loginAsHost(stored.joinCode, user.id);
           setSelectedSport(session.sport as Sport);
-          setSessionInfo({ sessionId: session.id, playerId: player.id, groupName: session.group_name, initials: player.initials, isHost: true, joinCode: session.join_code });
+          setSessionInfo({ sessionId: session.id, playerId: player.id, groupName: session.group_name, initials: player.initials, isHost: true, joinCode: session.join_code, gameMode: (session.game_mode as 'bingo' | 'blackout') ?? 'bingo', useSharedTerms: session.use_shared_terms ?? false });
           setView('game');
         } else {
           const { session, player } = await rejoinSession(stored.joinCode, user.id);
           setSelectedSport(session.sport as Sport);
-          setSessionInfo({ sessionId: session.id, playerId: player.id, groupName: session.group_name, initials: player.initials, isHost: false, joinCode: stored.joinCode });
+          setSessionInfo({ sessionId: session.id, playerId: player.id, groupName: session.group_name, initials: player.initials, isHost: false, joinCode: stored.joinCode, gameMode: (session.game_mode as 'bingo' | 'blackout') ?? 'bingo', useSharedTerms: session.use_shared_terms ?? false });
           setView('game');
         }
       } catch {
@@ -160,6 +162,8 @@ export default function App() {
       initials: username,
       isHost: false,
       joinCode: code,
+      gameMode: (session.game_mode as 'bingo' | 'blackout') ?? 'bingo',
+      useSharedTerms: session.use_shared_terms ?? false,
     });
     saveSession(code, false);
     setView('game');
@@ -178,10 +182,10 @@ export default function App() {
   };
 
   // --- Host Credentials ---
-  const handleCredentialsComplete = async (groupName: string, initials: string, joinCode: string) => {
+  const handleCredentialsComplete = async (groupName: string, initials: string, joinCode: string, gameMode: 'bingo' | 'blackout', useSharedTerms: boolean) => {
     if (!user || !selectedSport) return;
-    const { session, player } = await createMultiplayerSession(selectedSport, user.id, groupName, initials, joinCode);
-    setSessionInfo({ sessionId: session.id, playerId: player.id, groupName, initials, isHost: true, joinCode });
+    const { session, player } = await createMultiplayerSession(selectedSport, user.id, groupName, initials, joinCode, gameMode, useSharedTerms);
+    setSessionInfo({ sessionId: session.id, playerId: player.id, groupName, initials, isHost: true, joinCode, gameMode, useSharedTerms });
     saveSession(joinCode, true);
     setView('game');
   };
@@ -292,7 +296,20 @@ export default function App() {
           {view === 'login' && (
             <LoginPage
               defaultMode={loginMode}
-              onSuccess={() => { setFirstUseWon(false); setView('session-lobby'); }}
+              onSuccess={() => {
+                const pending = localStorage.getItem('sportsbingo_pending_board');
+                if (pending) {
+                  try {
+                    const { sport: pendingSport } = JSON.parse(pending);
+                    setSelectedSport(pendingSport as Sport);
+                    setSessionInfo(null);
+                    setView('game');
+                    return;
+                  } catch { /* fall through */ }
+                }
+                setFirstUseWon(false);
+                setView('session-lobby');
+              }}
               onContinueAsGuest={() => { setFirstUseWon(false); setView('session-lobby'); }}
               onBack={() => { firstUseWon ? setView('game') : handleBackToLobby(); }}
             />
@@ -305,6 +322,8 @@ export default function App() {
               onBack={handleBackToSportSelection}
               onContinue={handleCredentialsComplete}
               defaultUsername={username}
+              isAnonymous={user?.is_anonymous ?? false}
+              onShowLogin={(mode) => { setLoginMode(mode); setView('login'); }}
             />
           )}
           {view === 'multiplayer-code-login' && (
@@ -343,6 +362,8 @@ export default function App() {
                 username={username}
                 userId={user?.id}
                 isDev={isDev}
+                gameMode={sessionInfo?.gameMode ?? 'bingo'}
+                useSharedTerms={sessionInfo?.useSharedTerms ?? false}
                 onBackToSports={sessionInfo ? handleBackToMultiplayerLogin : handleBackToSportSelection}
                 onGameEnd={handleBackToLobby}
               />

@@ -87,7 +87,7 @@ export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJo
           className="w-full max-w-md"
         >
           <div className="text-center mb-8">
-            <h2 className="text-3xl uppercase tracking-wider mb-1" style={{ color: GREEN }}>Fanatic Bingo</h2>
+            <img src="/fanatic-bingo-logo.png" alt="Fanatic Bingo" className="mx-auto mb-1" style={{ maxWidth: '240px', width: '100%' }} />
             <p className="tracking-wider mb-2" style={{ color: GREEN, fontSize: '16px' }}>By Fans, For Fans.</p>
             <div className="h-1 w-20 mx-auto" style={{ backgroundColor: GREEN }} />
           </div>
