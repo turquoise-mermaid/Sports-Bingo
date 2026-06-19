@@ -64,13 +64,22 @@ function generateBoardOrder(items: BingoItem[]): number[] {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  const usedGroups = new Set<string>();
+  const groupSizes = new Map<string, number>();
+  for (const item of items) {
+    if (item.group) groupSizes.set(item.group, (groupSizes.get(item.group) ?? 0) + 1);
+  }
+  const groupUsage = new Map<string, number>();
   const selected: number[] = [];
   for (const idx of shuffled) {
     if (selected.length === 24) break;
     const group = items[idx].group;
-    if (group && usedGroups.has(group)) continue;
-    if (group) usedGroups.add(group);
+    if (group) {
+      const size = groupSizes.get(group) ?? 0;
+      const cap = size >= 15 ? 3 : size >= 8 ? 2 : 1;
+      const used = groupUsage.get(group) ?? 0;
+      if (used >= cap) continue;
+      groupUsage.set(group, used + 1);
+    }
     selected.push(idx);
   }
   return [...selected.slice(0, 12), -1, ...selected.slice(12)];
