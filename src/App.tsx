@@ -96,6 +96,7 @@ export default function App() {
   });
 
   const joinedViaUrlRef = useRef(false);
+  const reconnectAttemptedRef = useRef(false);
 
   // Route guests who arrive via shared link (?join=XXXX)
   useEffect(() => {
@@ -109,9 +110,11 @@ export default function App() {
     }
   }, []);
 
-  // Auto-reconnect from localStorage on load
+  // Auto-reconnect from localStorage on load — runs once only
   useEffect(() => {
     if (loading || !user) return;
+    if (reconnectAttemptedRef.current) return;
+    reconnectAttemptedRef.current = true;
     if (joinedViaUrlRef.current) { setReconnecting(false); return; }
 
     const stored = loadSession();
@@ -223,7 +226,7 @@ export default function App() {
   };
 
   const handleBackToSportSelection = () => setView('sport-selection');
-  const handleBackToMultiplayerLogin = () => setView('multiplayer-code-login');
+  const handleBackToMultiplayerLogin = () => { clearSession(); setSessionInfo(null); setView('multiplayer-code-login'); };
 
   const handleDevNavigate = ({ view: v, sport, sessionInfo: si }: {
     view: AppView; sport?: Sport; sessionInfo?: SessionInfo | null; username?: string;
@@ -354,6 +357,10 @@ export default function App() {
                 onShowLogin={(mode) => { setFirstUseWon(true); setLoginMode(mode); setView('login'); }}
                 onBack={handleBackToSportSelection}
                 onBackToLobby={() => { setFirstUseWon(false); setView('session-lobby'); }}
+                onFaq={() => setView('faq')}
+                onPrivacyPolicy={() => setView('privacy-policy')}
+                onTermsOfService={() => setView('terms-of-service')}
+                onSupport={() => setView('support')}
               />
             ) : (
               <BingoBoard
@@ -364,8 +371,14 @@ export default function App() {
                 isDev={isDev}
                 gameMode={sessionInfo?.gameMode ?? 'bingo'}
                 useSharedTerms={sessionInfo?.useSharedTerms ?? false}
+                isAnonymous={user?.is_anonymous ?? false}
                 onBackToSports={sessionInfo ? handleBackToMultiplayerLogin : handleBackToSportSelection}
                 onGameEnd={handleBackToLobby}
+                onAccount={() => setView('account')}
+                onFaq={() => setView('faq')}
+                onPrivacyPolicy={() => setView('privacy-policy')}
+                onTermsOfService={() => setView('terms-of-service')}
+                onSupport={() => setView('support')}
               />
             )
           )}

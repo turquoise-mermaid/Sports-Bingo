@@ -1,6 +1,7 @@
 import { ArrowLeft, RotateCcw, Share2, Info, Check } from 'lucide-react';
 import { Sport, SessionInfo } from '../App';
 import { Button } from './ui/button';
+import type { ReactNode } from 'react';
 
 const SPORT_NAMES: Record<Sport, string> = {
   soccer: 'Soccer',
@@ -27,6 +28,7 @@ interface BBBoardHeaderProps {
   onShuffleInfo?: () => void;
   onShareInfo?: () => void;
   hideNewBoard?: boolean;
+  menuElement?: ReactNode;
   // Handlers
   onBackToSports: () => void;
   onGameEnd: () => void;
@@ -50,6 +52,7 @@ export function BBBoardHeader({
   onShuffleInfo,
   onShareInfo,
   hideNewBoard,
+  menuElement,
   onBackToSports,
   onGameEnd,
   onShowBackInfo,
@@ -67,6 +70,7 @@ export function BBBoardHeader({
         {/* Left: Back + (i) + host actions */}
         <div className="flex flex-col items-start gap-0.5">
           <div className="flex items-center gap-1">
+            {menuElement}
             <Button
               onClick={onBackToSports}
               variant="ghost"
@@ -136,55 +140,57 @@ export function BBBoardHeader({
           {SPORT_NAMES[sport].toUpperCase()} BINGO
         </h2>
 
-        {/* Right: solo New Board | host Share | guest New Board */}
-        {!isMultiplayer && (
-          <Button
-            onClick={onRestart}
-            variant="ghost"
-            className="text-neutral-300 hover:bg-zinc-800 hover:text-green-500 h-8 px-3"
-          >
-            <RotateCcw className="w-4 h-4 mr-1" />
-            New Board
-          </Button>
-        )}
-        {imHost && (
-          <div className="flex flex-col items-end gap-1">
-            <div className="flex items-center gap-1">
-              {shareBlocked && onShareInfo && (
-                <button
-                  onClick={onShareInfo}
-                  className="text-neutral-500 hover:text-green-500 transition-colors"
-                  aria-label="Share locked info"
+        {/* Right: solo New Board | host Share | guest New Board | menu */}
+        <div className="flex items-start gap-1">
+          {!isMultiplayer && (
+            <Button
+              onClick={onRestart}
+              variant="ghost"
+              className="text-neutral-300 hover:bg-zinc-800 hover:text-green-500 h-8 px-3"
+            >
+              <RotateCcw className="w-4 h-4 mr-1" />
+              New Board
+            </Button>
+          )}
+          {imHost && (
+            <div className="flex flex-col items-end gap-1">
+              <div className="flex items-center gap-1">
+                {shareBlocked && onShareInfo && (
+                  <button
+                    onClick={onShareInfo}
+                    className="text-neutral-500 hover:text-green-500 transition-colors"
+                    aria-label="Share locked info"
+                  >
+                    <Info className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                <Button
+                  onClick={shareBlocked ? onShareInfo : onShare}
+                  variant="ghost"
+                  className={`h-8 px-3 ${shareBlocked ? 'text-zinc-600' : 'text-neutral-300 hover:text-green-500 hover:bg-zinc-800'}`}
                 >
-                  <Info className="w-3.5 h-3.5" />
-                </button>
+                  <Share2 className="w-4 h-4 mr-2" />
+                  <span style={{ fontSize: '14px' }}>{copied ? 'Copied!' : 'Share'}</span>
+                </Button>
+              </div>
+              {sessionInfo?.joinCode && (
+                <p className="text-neutral-400 pr-1" style={{ fontSize: '14px' }}>
+                  Join Code: <span className="text-green-500">{sessionInfo.joinCode}</span>
+                </p>
               )}
-              <Button
-                onClick={shareBlocked ? onShareInfo : onShare}
-                variant="ghost"
-                className={`h-8 px-3 ${shareBlocked ? 'text-zinc-600' : 'text-neutral-300 hover:text-green-500 hover:bg-zinc-800'}`}
-              >
-                <Share2 className="w-4 h-4 mr-2" />
-                <span style={{ fontSize: '14px' }}>{copied ? 'Copied!' : 'Share'}</span>
-              </Button>
             </div>
-            {sessionInfo?.joinCode && (
-              <p className="text-neutral-400 pr-1" style={{ fontSize: '14px' }}>
-                Join Code: <span className="text-green-500">{sessionInfo.joinCode}</span>
-              </p>
-            )}
-          </div>
-        )}
-        {!imHost && isMultiplayer && !hideNewBoard && (
-          <Button
-            onClick={onRestart}
-            variant="ghost"
-            className="text-neutral-300 hover:bg-zinc-800 hover:text-green-500 h-8 px-3"
-          >
-            <RotateCcw className="w-4 h-4 mr-1" />
-            New Board
-          </Button>
-        )}
+          )}
+          {!imHost && isMultiplayer && !hideNewBoard && (
+            <Button
+              onClick={onRestart}
+              variant="ghost"
+              className="text-neutral-300 hover:bg-zinc-800 hover:text-green-500 h-8 px-3"
+            >
+              <RotateCcw className="w-4 h-4 mr-1" />
+              New Board
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Subtitle row */}

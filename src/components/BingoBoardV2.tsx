@@ -22,6 +22,7 @@ import { Leaderboard } from './Leaderboard';
 import { BBBoardHeader } from './BBBoardHeader';
 import { BBBackInfoSheet } from './BBBackInfoSheet';
 import { BBExpandedSquareSheet } from './BBExpandedSquareSheet';
+import { HamburgerMenu } from './HamburgerMenu';
 import { logEvent } from '../lib/analytics';
 
 const GREEN = '#17BB34';
@@ -35,8 +36,14 @@ interface BingoBoardV2Props {
   isDev?: boolean;
   gameMode?: 'bingo' | 'blackout';
   useSharedTerms?: boolean;
+  isAnonymous?: boolean;
   onBackToSports: () => void;
   onGameEnd: () => void;
+  onAccount: () => void;
+  onFaq: () => void;
+  onPrivacyPolicy: () => void;
+  onTermsOfService: () => void;
+  onSupport: () => void;
 }
 
 const WINNING_PATTERNS = [
@@ -100,7 +107,7 @@ function boardFromOrder(items: BingoItem[], order: number[]): (BingoItem | null)
 
 const PENDING_BOARD_KEY = 'sportsbingo_pending_board';
 
-export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, gameMode = 'bingo', useSharedTerms = false, onBackToSports, onGameEnd }: BingoBoardV2Props) {
+export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, gameMode = 'bingo', useSharedTerms = false, isAnonymous = false, onBackToSports, onGameEnd, onAccount, onFaq, onPrivacyPolicy, onTermsOfService, onSupport }: BingoBoardV2Props) {
   const isMultiplayer = !!sessionInfo;
   const imHost = !!sessionInfo?.isHost;
   const isBlackoutMode = gameMode === 'blackout';
@@ -725,6 +732,16 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
           if (imHost && useSharedTerms && !termsConfirmed && shufflesRemaining <= 0) return;
           setShowRestartConfirm(true);
         }}
+        menuElement={
+          <HamburgerMenu
+            isAnonymous={isAnonymous}
+            onAccount={onAccount}
+            onFaq={onFaq}
+            onPrivacyPolicy={onPrivacyPolicy}
+            onTermsOfService={onTermsOfService}
+            onSupport={onSupport}
+          />
+        }
       />
 
       <div className="w-full max-w-md mx-auto">
@@ -742,13 +759,10 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
               isFreeSpace={index === 12}
               onClick={() => {
                 if (index === 12) return;
-                if (!markedSquares.has(index)) handleConfirmMark(index);
-                setExpandedSquare(index);
-              }}
-              onDoubleClick={index !== 12 ? () => {
                 if (markedSquares.has(index)) handleConfirmUnmark(index);
-                setExpandedSquare(index);
-              } : undefined}
+                else handleConfirmMark(index);
+              }}
+              onLongPress={index !== 12 ? () => setExpandedSquare(index) : undefined}
             />
           ))}
         </motion.div>

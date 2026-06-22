@@ -31,10 +31,19 @@ export function HowToPlay({ onBack }: HowToPlayProps) {
           <div className="h-1 w-20 bg-green-500 mx-auto mb-6" />
 
           <div className="flex flex-col gap-5">
-
             <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
               <p className="text-neutral-300 leading-relaxed" style={{ fontSize: '14px' }}>
-                Fanatic Bingo is designed to be played alongside a live game. Open your board before kickoff, follow along as the action happens, and mark your squares in real time as each moment occurs.
+                Fanatic Bingo is designed to be played alongside a live game. Open your board at anytime during a game, follow along as the action happens, and mark your squares in real time as each moment occurs.
+              </p>
+            </div>
+
+            <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
+              <p className="text-green-500 uppercase tracking-wider font-semibold mb-2" style={{ fontSize: '12px' }}>Private vs. Multiplayer</p>
+              <p className="text-neutral-300 leading-relaxed" style={{ fontSize: '14px' }}>
+                <span className="text-neutral-200 font-semibold">Private Game</span> — Play solo on your own board at your own pace. Play to five in a row or continue on to get blackout bingo.
+              </p>
+              <p className="text-neutral-300 leading-relaxed mt-2" style={{ fontSize: '14px' }}>
+                <span className="text-neutral-200 font-semibold">Multiplayer</span> — Play with friends watching the same game. The host will decicde between five in a row or blackout bingo, if everyone gets the same terms or different terms. Login with the game code from the host and see who gets bingo first.
               </p>
             </div>
 
@@ -45,12 +54,7 @@ export function HowToPlay({ onBack }: HowToPlayProps) {
               </p>
             </div>
 
-            <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
-              <p className="text-green-500 uppercase tracking-wider font-semibold mb-2" style={{ fontSize: '12px' }}>Free Space</p>
-              <p className="text-neutral-300 leading-relaxed" style={{ fontSize: '14px' }}>
-                The center square is a free space — it's marked automatically at the start of every game.
-              </p>
-            </div>
+            
 
             <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
               <p className="text-green-500 uppercase tracking-wider font-semibold mb-2" style={{ fontSize: '12px' }}>Getting Bingo</p>
@@ -60,12 +64,9 @@ export function HowToPlay({ onBack }: HowToPlayProps) {
             </div>
 
             <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
-              <p className="text-green-500 uppercase tracking-wider font-semibold mb-2" style={{ fontSize: '12px' }}>Private vs. Multiplayer</p>
+              <p className="text-green-500 uppercase tracking-wider font-semibold mb-2" style={{ fontSize: '12px' }}>Free Space</p>
               <p className="text-neutral-300 leading-relaxed" style={{ fontSize: '14px' }}>
-                <span className="text-neutral-200 font-semibold">Private Game</span> — Play solo on your own board at your own pace.
-              </p>
-              <p className="text-neutral-300 leading-relaxed mt-2" style={{ fontSize: '14px' }}>
-                <span className="text-neutral-200 font-semibold">Multiplayer</span> — Play with friends watching the same game. Everyone gets the same terms on a different board layout. Share your game code and see who gets bingo first.
+                The center square is a free space — it's marked automatically at the start of every game.
               </p>
             </div>
 
