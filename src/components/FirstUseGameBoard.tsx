@@ -8,6 +8,7 @@ import { getBingoItems, BingoItem } from './bingoDataNoIcons';
 import { Confetti } from './Confetti';
 import { Button } from './ui/button';
 import { logEvent } from '../lib/analytics';
+import { HamburgerMenu } from './HamburgerMenu';
 
 const SPORT_NAMES: Record<Sport, string> = {
   soccer: 'Soccer',
@@ -68,9 +69,13 @@ interface FirstUseGameBoardProps {
   onBack: () => void;
   onBackToLobby: () => void;
   initialHasBingo?: boolean;
+  onFaq: () => void;
+  onPrivacyPolicy: () => void;
+  onTermsOfService: () => void;
+  onSupport: () => void;
 }
 
-export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin, onBack, onBackToLobby, initialHasBingo }: FirstUseGameBoardProps) {
+export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin, onBack, onBackToLobby, initialHasBingo, onFaq, onPrivacyPolicy, onTermsOfService, onSupport }: FirstUseGameBoardProps) {
   const [bingoItems, setBingoItems] = useState<(BingoItem | null)[]>([]);
   const [markedSquares, setMarkedSquares] = useState<Set<number>>(new Set([12]));
   const [expandedSquare, setExpandedSquare] = useState<number | null>(null);
@@ -141,18 +146,26 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
       <div className="relative z-10 px-2 pt-2">
         {/* Header */}
         <div className="relative flex items-center justify-between mb-1">
-          {hasBingo ? (
-            <div style={{ width: '80px', height: '32px', backgroundColor: '#09090b' }} />
-          ) : (
-            <Button
-              onClick={handleBack}
-              variant="ghost"
-              className="text-neutral-300 hover:bg-zinc-800 hover:text-green-500 h-8 px-3"
-            >
-              <ArrowLeft style={{ width: '1rem', height: '1rem', marginRight: '0.25rem' }} />
-              Back
-            </Button>
-          )}
+          <div className="flex items-center gap-1">
+            <HamburgerMenu
+              isAnonymous={true}
+              onAccount={() => {}}
+              onFaq={onFaq}
+              onPrivacyPolicy={onPrivacyPolicy}
+              onTermsOfService={onTermsOfService}
+              onSupport={onSupport}
+            />
+            {!hasBingo && (
+              <Button
+                onClick={handleBack}
+                variant="ghost"
+                className="text-neutral-300 hover:bg-zinc-800 hover:text-green-500 h-8 px-3"
+              >
+                <ArrowLeft style={{ width: '1rem', height: '1rem', marginRight: '0.25rem' }} />
+                Back
+              </Button>
+            )}
+          </div>
           <h2
             className="absolute text-green-500 uppercase tracking-wider text-base text-center whitespace-nowrap pointer-events-none"
             style={{ left: '50%', transform: 'translateX(-50%)' }}
@@ -192,14 +205,11 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
                 isMarked={markedSquares.has(index)}
                 isFreeSpace={index === 12}
                 onClick={() => {
-                  if (index === 12) return;
-                  if (doubleClickEnabled && !markedSquares.has(index)) handleConfirmMark(index);
-                  setExpandedSquare(index);
-                }}
-                onDoubleClick={doubleClickEnabled && index !== 12 ? () => {
+                  if (index === 12 || !doubleClickEnabled) return;
                   if (markedSquares.has(index)) handleConfirmUnmark(index);
-                  setExpandedSquare(index);
-                } : undefined}
+                  else handleConfirmMark(index);
+                }}
+                onLongPress={index !== 12 ? () => setExpandedSquare(index) : undefined}
               />
             ))}
           </motion.div>
