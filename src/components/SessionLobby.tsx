@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Info, Menu } from 'lucide-react';
+import { Info, Menu, QrCode, X } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { Button } from './ui/button';
 
@@ -39,6 +40,7 @@ const INFO = {
 
 export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJoin, onFaq, onPrivacyPolicy, onTermsOfService, onAccount, onSupport, onHowToPlay, onShowLogin }: SessionLobbyProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showLobbyQR, setShowLobbyQR] = useState(false);
   const [infoPopup, setInfoPopup] = useState<'solo' | 'multiplayer' | 'join' | null>(null);
   const [joinExpanded, setJoinExpanded] = useState(false);
   const [joinCode, setJoinCode] = useState('');
@@ -233,7 +235,7 @@ export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJo
 
           </div>
 
-          <div className="flex justify-center mt-5">
+          <div className="flex justify-center items-center gap-4 mt-5">
             <button
               type="button"
               onClick={onHowToPlay}
@@ -241,6 +243,14 @@ export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJo
               style={{ fontSize: '12px' }}
             >
               How to Play
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowLobbyQR(true)}
+              className="text-neutral-500 hover:text-green-500 transition-colors"
+              aria-label="Show QR code"
+            >
+              <QrCode className="w-4 h-4" />
             </button>
           </div>
 
@@ -280,6 +290,43 @@ export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJo
                 <button type="button" onClick={() => { setMenuOpen(false); onTermsOfService(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700" style={{ fontSize: '15px' }}>Terms of Service</button>
                 <button type="button" onClick={() => { setMenuOpen(false); onSupport(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3" style={{ fontSize: '15px' }}>Submit an Issue</button>
               </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Lobby QR modal */}
+      <AnimatePresence>
+        {showLobbyQR && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowLobbyQR(false)}
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ type: 'spring', damping: 25 }}
+              className="fixed z-50 bg-zinc-800 rounded-xl p-6 flex flex-col items-center gap-4"
+              style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '280px', border: `2px solid ${GREEN}` }}
+            >
+              <div className="w-full flex items-center justify-between">
+                <p className="text-green-500 uppercase tracking-wider font-semibold" style={{ fontSize: '12px' }}>Fanatic Bingo</p>
+                <button
+                  type="button"
+                  onClick={() => setShowLobbyQR(false)}
+                  className="text-neutral-500 hover:text-neutral-200 transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="p-3 bg-white rounded-lg">
+                <QRCodeSVG value="https://fanaticbingo.com" size={180} level="M" />
+              </div>
+              <p className="text-neutral-400" style={{ fontSize: '12px' }}>fanaticbingo.com</p>
             </motion.div>
           </>
         )}
