@@ -7,13 +7,14 @@ const GREEN = '#17BB34';
 interface HamburgerMenuProps {
   isAnonymous: boolean;
   onAccount: () => void;
+  onHowToPlay: () => void;
   onFaq: () => void;
   onPrivacyPolicy: () => void;
   onTermsOfService: () => void;
   onSupport: () => void;
 }
 
-export function HamburgerMenu({ isAnonymous, onAccount, onFaq, onPrivacyPolicy, onTermsOfService, onSupport }: HamburgerMenuProps) {
+export function HamburgerMenu({ isAnonymous, onAccount, onHowToPlay, onFaq, onPrivacyPolicy, onTermsOfService, onSupport }: HamburgerMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -54,6 +55,7 @@ export function HamburgerMenu({ isAnonymous, onAccount, onFaq, onPrivacyPolicy, 
                     My Account
                   </button>
                 )}
+                <button type="button" onClick={() => { setMenuOpen(false); onHowToPlay(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700" style={{ fontSize: '15px' }}>How to Play</button>
                 <button type="button" onClick={() => { setMenuOpen(false); onFaq(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700" style={{ fontSize: '15px' }}>FAQs</button>
                 <button type="button" onClick={() => { setMenuOpen(false); onPrivacyPolicy(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700" style={{ fontSize: '15px' }}>Privacy Policy</button>
                 <button type="button" onClick={() => { setMenuOpen(false); onTermsOfService(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700" style={{ fontSize: '15px' }}>Terms of Service</button>

@@ -1,4 +1,7 @@
-import { ArrowLeft, RotateCcw, Share2, Info, Check } from 'lucide-react';
+import { ArrowLeft, RotateCcw, Share2, Info, Check, QrCode, X } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Sport, SessionInfo } from '../App';
 import { Button } from './ui/button';
 import type { ReactNode } from 'react';
@@ -59,8 +62,10 @@ export function BBBoardHeader({
   onShare,
   onRestart,
 }: BBBoardHeaderProps) {
+  const [showJoinQR, setShowJoinQR] = useState(false);
   const shareBlocked = isMultiplayer && imHost && useSharedTerms && !termsConfirmed;
   const newBoardDisabled = isMultiplayer && imHost && useSharedTerms && !termsConfirmed && (shufflesRemaining ?? 0) <= 0;
+  const joinUrl = sessionInfo?.joinCode ? `https://fanaticbingo.com/?join=${sessionInfo.joinCode}` : '';
 
   return (
     <>
@@ -172,6 +177,15 @@ export function BBBoardHeader({
                   <Share2 className="w-4 h-4 mr-2" />
                   <span style={{ fontSize: '14px' }}>{copied ? 'Copied!' : 'Share'}</span>
                 </Button>
+                {!shareBlocked && sessionInfo?.joinCode && (
+                  <button
+                    onClick={() => setShowJoinQR(true)}
+                    className="text-neutral-400 hover:text-green-500 transition-colors"
+                    aria-label="Show join QR code"
+                  >
+                    <QrCode className="w-4 h-4" />
+                  </button>
+                )}
               </div>
               {sessionInfo?.joinCode && (
                 <p className="text-neutral-400 pr-1" style={{ fontSize: '14px' }}>
@@ -207,6 +221,39 @@ export function BBBoardHeader({
             <p className="text-neutral-200" style={{ fontSize: '14px' }}>{username}'s Board</p>
           )}
         </div>
+      )}
+
+      {/* Join QR modal — rendered via portal to escape any transformed ancestors */}
+      {showJoinQR && createPortal(
+        <>
+          <div
+            onClick={() => setShowJoinQR(false)}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40"
+          />
+          <div
+            className="fixed z-50 bg-zinc-800 rounded-xl p-6 flex flex-col items-center gap-4"
+            style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '280px', border: '2px solid #17BB34' }}
+          >
+            <div className="w-full flex items-center justify-between">
+              <p className="text-green-500 uppercase tracking-wider font-semibold" style={{ fontSize: '12px' }}>Join Game</p>
+              <button
+                type="button"
+                onClick={() => setShowJoinQR(false)}
+                className="text-neutral-500 hover:text-neutral-200 transition-colors"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-3 bg-white rounded-lg">
+              <QRCodeSVG value={joinUrl} size={180} level="M" />
+            </div>
+            <p className="text-neutral-400 text-center" style={{ fontSize: '16px' }}>
+              Scan to Join · Code: <span className="text-green-500 font-mono">{sessionInfo?.joinCode}</span>
+            </p>
+          </div>
+        </>,
+        document.body
       )}
     </>
   );

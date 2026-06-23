@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Info, Menu } from 'lucide-react';
+import { Info, Menu, QrCode, X } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { Button } from './ui/button';
 
@@ -16,6 +17,7 @@ interface SessionLobbyProps {
   onAccount: () => void;
   onSupport: () => void;
   onHowToPlay: () => void;
+  onHowToPlayText: () => void;
   onShowLogin: (mode: 'signin' | 'signup') => void;
 }
 
@@ -37,8 +39,9 @@ const INFO = {
   },
 };
 
-export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJoin, onFaq, onPrivacyPolicy, onTermsOfService, onAccount, onSupport, onHowToPlay, onShowLogin }: SessionLobbyProps) {
+export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJoin, onFaq, onPrivacyPolicy, onTermsOfService, onAccount, onSupport, onHowToPlay, onHowToPlayText, onShowLogin }: SessionLobbyProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showLobbyQR, setShowLobbyQR] = useState(false);
   const [infoPopup, setInfoPopup] = useState<'solo' | 'multiplayer' | 'join' | null>(null);
   const [joinExpanded, setJoinExpanded] = useState(false);
   const [joinCode, setJoinCode] = useState('');
@@ -86,14 +89,14 @@ export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJo
           animate={{ scale: 1, opacity: 1 }}
           className="w-full max-w-md"
         >
-          <div className="text-center mb-8">
+          <div className="text-center mb-4">
             <img src="/fanatic-bingo-logo.png" alt="Fanatic Bingo" className="mx-auto mb-1" style={{ maxWidth: '240px', width: '100%' }} />
             <p className="tracking-wider mb-2" style={{ color: GREEN, fontSize: '16px' }}>By Fans, For Fans.</p>
             <div className="h-1 w-20 mx-auto" style={{ backgroundColor: GREEN }} />
           </div>
 
           {/* Username display */}
-          <div className="w-full mb-3 text-center" style={{ minHeight: '52px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="w-full mb-4 text-center">
             {!user.is_anonymous ? (
               <p className="text-neutral-200" style={{ fontSize: '18px' }}>
                 Welcome, <span style={{ color: GREEN, fontWeight: 600 }}>{username}</span>!
@@ -233,14 +236,22 @@ export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJo
 
           </div>
 
-          <div className="flex justify-center mt-5">
+          <div className="flex flex-col items-center gap-3 mt-5">
             <button
               type="button"
               onClick={onHowToPlay}
               className="text-neutral-500 hover:text-green-500 transition-colors uppercase tracking-wider"
-              style={{ fontSize: '12px' }}
+              style={{ fontSize: '16px' }}
             >
               How to Play
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowLobbyQR(true)}
+              className="text-neutral-500 hover:text-green-500 transition-colors"
+              aria-label="Show QR code"
+            >
+              <QrCode className="w-6 h-6" />
             </button>
           </div>
 
@@ -275,11 +286,49 @@ export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJo
                     My Account
                   </button>
                 )}
+                <button type="button" onClick={() => { setMenuOpen(false); onHowToPlayText(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700" style={{ fontSize: '15px' }}>How to Play</button>
                 <button type="button" onClick={() => { setMenuOpen(false); onFaq(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700" style={{ fontSize: '15px' }}>FAQs</button>
                 <button type="button" onClick={() => { setMenuOpen(false); onPrivacyPolicy(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700" style={{ fontSize: '15px' }}>Privacy Policy</button>
                 <button type="button" onClick={() => { setMenuOpen(false); onTermsOfService(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700" style={{ fontSize: '15px' }}>Terms of Service</button>
                 <button type="button" onClick={() => { setMenuOpen(false); onSupport(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3" style={{ fontSize: '15px' }}>Submit an Issue</button>
               </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Lobby QR modal */}
+      <AnimatePresence>
+        {showLobbyQR && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowLobbyQR(false)}
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ type: 'spring', damping: 25 }}
+              className="fixed z-50 bg-zinc-800 rounded-xl p-6 flex flex-col items-center gap-4"
+              style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '280px', border: `2px solid ${GREEN}` }}
+            >
+              <div className="w-full flex items-center justify-between">
+                <p className="text-green-500 uppercase tracking-wider font-semibold" style={{ fontSize: '12px' }}>Fanatic Bingo</p>
+                <button
+                  type="button"
+                  onClick={() => setShowLobbyQR(false)}
+                  className="text-neutral-500 hover:text-neutral-200 transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="p-3 bg-white rounded-lg">
+                <QRCodeSVG value="https://fanaticbingo.com" size={180} level="M" />
+              </div>
+              <p className="text-neutral-400" style={{ fontSize: '12px' }}>fanaticbingo.com</p>
             </motion.div>
           </>
         )}

@@ -18,7 +18,15 @@ const faqs = [
   },
   {
     q: 'How do I mark a square?',
-    a: 'Tap any square to see its description, then confirm to mark it. You can also unmark a square if you made a mistake.',
+    a: 'Double-tap a square to mark it when that moment happens in the game. Double-tap it again to unmark it if you made a mistake. Long-press any square to see what it means.',
+  },
+  {
+    q: 'What is Blackout Bingo?',
+    a: 'Blackout Bingo is an alternate win condition where you need to mark every single square on the board instead of just five in a row. In multiplayer, the host chooses between standard Bingo (five in a row) and Blackout before the game starts.',
+  },
+  {
+    q: 'What does "Shared Terms" mean in multiplayer?',
+    a: 'When the host enables Shared Terms, every player gets the exact same set of bingo terms on their board — just arranged in a different order. With Shared Terms off, each player gets a different random selection of terms. The host sets this option before the game starts.',
   },
   {
     q: 'How do I create a multiplayer game?',

@@ -12,7 +12,7 @@ const soccerItems: BingoItem[] = [
 { name: 'Shoulder Charge', description: 'A legal move where players make minimal shoulder contact to fight for the ball.', group: 'attack' },
 { name: 'Steal', description: 'A player takes the ball away from an opponent without breaking any rules.', group: 'attack' },
 { name: 'Trailing', description: 'Following behind another player.', group: 'attack' },
-{ name: 'Counter- attack', description: 'A fast transition from defense to offense, aiming to catch the opposing team off guard and create scoring opportunities.', group: 'attack' },
+{ name: 'Counter-attack', description: 'A fast transition from defense to offense, aiming to catch the opposing team off guard and create scoring opportunities.', group: 'attack' },
 { name: 'Checking', description: 'Sudden movements by a player in one direction then another to evade a defender and create space for receiving a pass.', group: 'attack' },
 { name: 'Cut', description: 'A player makes a sharp change of direction while dribbling to evade defenders.', group: 'attack' },
 { name: 'Breakaway', description: 'An attacking player makes a fast move toward the goal and gets past the defense to face the goalkeeper alone.', group: 'attack' },
