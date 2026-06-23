@@ -69,13 +69,14 @@ interface FirstUseGameBoardProps {
   onBack: () => void;
   onBackToLobby: () => void;
   initialHasBingo?: boolean;
+  onHowToPlay: () => void;
   onFaq: () => void;
   onPrivacyPolicy: () => void;
   onTermsOfService: () => void;
   onSupport: () => void;
 }
 
-export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin, onBack, onBackToLobby, initialHasBingo, onFaq, onPrivacyPolicy, onTermsOfService, onSupport }: FirstUseGameBoardProps) {
+export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin, onBack, onBackToLobby, initialHasBingo, onHowToPlay, onFaq, onPrivacyPolicy, onTermsOfService, onSupport }: FirstUseGameBoardProps) {
   const [bingoItems, setBingoItems] = useState<(BingoItem | null)[]>([]);
   const [markedSquares, setMarkedSquares] = useState<Set<number>>(new Set([12]));
   const [expandedSquare, setExpandedSquare] = useState<number | null>(null);
@@ -150,6 +151,7 @@ export function FirstUseGameBoard({ sport, username, userId, isDev, onShowLogin,
             <HamburgerMenu
               isAnonymous={true}
               onAccount={() => {}}
+              onHowToPlay={onHowToPlay}
               onFaq={onFaq}
               onPrivacyPolicy={onPrivacyPolicy}
               onTermsOfService={onTermsOfService}

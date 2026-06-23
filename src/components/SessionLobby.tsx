@@ -17,6 +17,7 @@ interface SessionLobbyProps {
   onAccount: () => void;
   onSupport: () => void;
   onHowToPlay: () => void;
+  onHowToPlayText: () => void;
   onShowLogin: (mode: 'signin' | 'signup') => void;
 }
 
@@ -38,7 +39,7 @@ const INFO = {
   },
 };
 
-export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJoin, onFaq, onPrivacyPolicy, onTermsOfService, onAccount, onSupport, onHowToPlay, onShowLogin }: SessionLobbyProps) {
+export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJoin, onFaq, onPrivacyPolicy, onTermsOfService, onAccount, onSupport, onHowToPlay, onHowToPlayText, onShowLogin }: SessionLobbyProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showLobbyQR, setShowLobbyQR] = useState(false);
   const [infoPopup, setInfoPopup] = useState<'solo' | 'multiplayer' | 'join' | null>(null);
@@ -88,14 +89,14 @@ export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJo
           animate={{ scale: 1, opacity: 1 }}
           className="w-full max-w-md"
         >
-          <div className="text-center mb-8">
+          <div className="text-center mb-4">
             <img src="/fanatic-bingo-logo.png" alt="Fanatic Bingo" className="mx-auto mb-1" style={{ maxWidth: '240px', width: '100%' }} />
             <p className="tracking-wider mb-2" style={{ color: GREEN, fontSize: '16px' }}>By Fans, For Fans.</p>
             <div className="h-1 w-20 mx-auto" style={{ backgroundColor: GREEN }} />
           </div>
 
           {/* Username display */}
-          <div className="w-full mb-3 text-center" style={{ minHeight: '52px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="w-full mb-4 text-center">
             {!user.is_anonymous ? (
               <p className="text-neutral-200" style={{ fontSize: '18px' }}>
                 Welcome, <span style={{ color: GREEN, fontWeight: 600 }}>{username}</span>!
@@ -235,12 +236,12 @@ export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJo
 
           </div>
 
-          <div className="flex justify-center items-center gap-4 mt-5">
+          <div className="flex flex-col items-center gap-3 mt-5">
             <button
               type="button"
               onClick={onHowToPlay}
               className="text-neutral-500 hover:text-green-500 transition-colors uppercase tracking-wider"
-              style={{ fontSize: '12px' }}
+              style={{ fontSize: '16px' }}
             >
               How to Play
             </button>
@@ -250,7 +251,7 @@ export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJo
               className="text-neutral-500 hover:text-green-500 transition-colors"
               aria-label="Show QR code"
             >
-              <QrCode className="w-4 h-4" />
+              <QrCode className="w-6 h-6" />
             </button>
           </div>
 
@@ -285,6 +286,7 @@ export function SessionLobby({ user, username, onSolo, onMultiplayerCreate, onJo
                     My Account
                   </button>
                 )}
+                <button type="button" onClick={() => { setMenuOpen(false); onHowToPlayText(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700" style={{ fontSize: '15px' }}>How to Play</button>
                 <button type="button" onClick={() => { setMenuOpen(false); onFaq(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700" style={{ fontSize: '15px' }}>FAQs</button>
                 <button type="button" onClick={() => { setMenuOpen(false); onPrivacyPolicy(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700" style={{ fontSize: '15px' }}>Privacy Policy</button>
                 <button type="button" onClick={() => { setMenuOpen(false); onTermsOfService(); }} className="text-left text-neutral-200 hover:text-green-500 transition-colors py-3 border-b border-zinc-700" style={{ fontSize: '15px' }}>Terms of Service</button>

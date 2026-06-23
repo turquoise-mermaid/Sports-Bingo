@@ -40,6 +40,7 @@ interface BingoBoardV2Props {
   onBackToSports: () => void;
   onGameEnd: () => void;
   onAccount: () => void;
+  onHowToPlay: () => void;
   onFaq: () => void;
   onPrivacyPolicy: () => void;
   onTermsOfService: () => void;
@@ -107,7 +108,7 @@ function boardFromOrder(items: BingoItem[], order: number[]): (BingoItem | null)
 
 const PENDING_BOARD_KEY = 'sportsbingo_pending_board';
 
-export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, gameMode = 'bingo', useSharedTerms = false, isAnonymous = false, onBackToSports, onGameEnd, onAccount, onFaq, onPrivacyPolicy, onTermsOfService, onSupport }: BingoBoardV2Props) {
+export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, gameMode = 'bingo', useSharedTerms = false, isAnonymous = false, onBackToSports, onGameEnd, onAccount, onHowToPlay, onFaq, onPrivacyPolicy, onTermsOfService, onSupport }: BingoBoardV2Props) {
   const isMultiplayer = !!sessionInfo;
   const imHost = !!sessionInfo?.isHost;
   const isBlackoutMode = gameMode === 'blackout';
@@ -736,6 +737,7 @@ export function BingoBoardV2({ sport, sessionInfo, username, userId, isDev, game
           <HamburgerMenu
             isAnonymous={isAnonymous}
             onAccount={onAccount}
+            onHowToPlay={onHowToPlay}
             onFaq={onFaq}
             onPrivacyPolicy={onPrivacyPolicy}
             onTermsOfService={onTermsOfService}

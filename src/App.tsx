@@ -14,6 +14,7 @@ import { LoginPage } from './components/LoginPage';
 import { CompleteProfilePage } from './components/CompleteProfilePage';
 import { SupportPage } from './components/SupportPage';
 import { HowToPlay } from './components/HowToPlay';
+import { HowToPlayCarousel } from './components/HowToPlayCarousel';
 import { DevNav } from './components/DevNav';
 import { useAuth } from './hooks/useAuth';
 import { createMultiplayerSession, loginAsHost, rejoinSession, joinSessionByCode, SessionRow } from './lib/sessions';
@@ -36,6 +37,7 @@ type AppView =
   | 'account'
   | 'support'
   | 'how-to-play'
+  | 'how-to-play-carousel'
   | 'game';
 
 type SessionMode = 'solo' | 'multiplayer-create';
@@ -275,7 +277,8 @@ export default function App() {
               onTermsOfService={() => setView('terms-of-service')}
               onAccount={() => setView('account')}
               onSupport={() => setView('support')}
-              onHowToPlay={() => setView('how-to-play')}
+              onHowToPlay={() => setView('how-to-play-carousel')}
+              onHowToPlayText={() => setView('how-to-play')}
               onShowLogin={(mode) => { setLoginMode(mode); setView('login'); }}
             />
           )}
@@ -284,6 +287,7 @@ export default function App() {
           {view === 'terms-of-service' && <TermsOfService onBack={handleBackToLobby} />}
           {view === 'support' && <SupportPage onBack={handleBackToLobby} userEmail={user.email ?? ''} />}
           {view === 'how-to-play' && <HowToPlay onBack={handleBackToLobby} />}
+          {view === 'how-to-play-carousel' && <HowToPlayCarousel onDone={handleBackToLobby} />}
           {view === 'account' && (
             <AccountPage
               username={username}
@@ -357,6 +361,7 @@ export default function App() {
                 onShowLogin={(mode) => { setFirstUseWon(true); setLoginMode(mode); setView('login'); }}
                 onBack={handleBackToSportSelection}
                 onBackToLobby={() => { setFirstUseWon(false); setView('session-lobby'); }}
+                onHowToPlay={() => setView('how-to-play')}
                 onFaq={() => setView('faq')}
                 onPrivacyPolicy={() => setView('privacy-policy')}
                 onTermsOfService={() => setView('terms-of-service')}
@@ -375,6 +380,7 @@ export default function App() {
                 onBackToSports={sessionInfo ? handleBackToMultiplayerLogin : handleBackToSportSelection}
                 onGameEnd={handleBackToLobby}
                 onAccount={() => setView('account')}
+                onHowToPlay={() => setView('how-to-play')}
                 onFaq={() => setView('faq')}
                 onPrivacyPolicy={() => setView('privacy-policy')}
                 onTermsOfService={() => setView('terms-of-service')}

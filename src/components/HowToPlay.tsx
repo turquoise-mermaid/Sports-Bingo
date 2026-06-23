@@ -50,7 +50,7 @@ export function HowToPlay({ onBack }: HowToPlayProps) {
             <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
               <p className="text-green-500 uppercase tracking-wider font-semibold mb-2" style={{ fontSize: '12px' }}>Marking Squares</p>
               <p className="text-neutral-300 leading-relaxed" style={{ fontSize: '14px' }}>
-                Tap a square to mark it when that moment happens in the game. The square will highlight to show it's marked. Double-tap a marked square to unmark it if you made a mistake.
+                Double-tap a square when that moment happens in the game. The square will highlight to show it's marked. Double-tap again to unmark it. Long-press any square to see what it means.
               </p>
             </div>
 
